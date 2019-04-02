@@ -1,0 +1,4 @@
+﻿  ResourceManager.cpp
+c:\users\dielb\desktop\cmp505coursework\cmp505coursework\resourcemanager.cpp(121): warning C4316: 'SkyDome': object allocated on the heap may not be aligned 16
+c:\users\dielb\desktop\cmp505coursework\cmp505coursework\resourcemanager.cpp(125): warning C4316: 'Model': object allocated on the heap may not be aligned 16
+  CMP505Coursework.vcxproj -> C:\Users\dielb\Desktop\CMP505Coursework\Debug\CMP505Coursework.exe
