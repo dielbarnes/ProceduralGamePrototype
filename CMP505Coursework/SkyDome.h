@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Model.h"
+#include "ObjModel.h"
 
 struct SkyDomeVertex
 {

@@ -10,7 +10,7 @@
 #pragma once
 
 #include "Shader.h"
-#include "Model.h"
+#include "ObjModel.h"
 #include "Camera.h"
 
 struct CameraBuffer // For vertex shader
@@ -35,7 +35,7 @@ public:
 	~LightShader();
 
 	HRESULT Initialize();
-	bool Render(Model* pModel, Camera* pCamera);
+	bool Render(ObjModel* pModel, Camera* pCamera);
 
 private:
 	ID3D11VertexShader* m_pInstanceVertexShader;

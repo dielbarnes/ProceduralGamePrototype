@@ -156,7 +156,7 @@ HRESULT LightShader::Initialize()
 
 #pragma region Render
 
-bool LightShader::Render(Model* pModel, Camera* pCamera)
+bool LightShader::Render(ObjModel* pModel, Camera* pCamera)
 {
 	HRESULT result = S_OK;
 

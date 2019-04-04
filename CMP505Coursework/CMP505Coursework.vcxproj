@@ -121,7 +121,7 @@
     <ClCompile Include="GraphicsEngine.cpp" />
     <ClCompile Include="LightShader.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="ObjModel.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
@@ -136,7 +136,7 @@
     <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="GraphicsEngine.h" />
     <ClInclude Include="LightShader.h" />
-    <ClInclude Include="Model.h" />
+    <ClInclude Include="ObjModel.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderManager.h" />

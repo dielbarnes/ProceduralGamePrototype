@@ -42,7 +42,7 @@ HRESULT ShaderManager::InitializeShaders()
 
 #pragma region Render
 
-bool ShaderManager::RenderModel(Model* pModel, Camera* pCamera)
+bool ShaderManager::RenderModel(ObjModel* pModel, Camera* pCamera)
 {
 	return m_pLightShader->Render(pModel, pCamera);
 }

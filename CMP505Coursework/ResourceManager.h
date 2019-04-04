@@ -11,15 +11,16 @@
 #include "SkyDome.h"
 #include "Utils.h"
 
-enum TextureResource : int
+enum DdsTextureResource : int
 {
-	GroundTexture = 0
+	GroundTexture = 0,
+	KnightTexture
 };
 
-enum ModelResource : int
+enum ObjModelResource : int
 {
 	GroundModel = 0,
-	SkyDomeModel		// Not in models vector
+	SkyDomeModel		// Not in obj models vector
 };
 
 class ResourceManager
@@ -29,18 +30,18 @@ public:
 	~ResourceManager();
 
 	bool LoadResources();
-	ID3D11ShaderResourceView* GetTexture(TextureResource resource);
-	Model* GetModel(ModelResource resource);
+	ID3D11ShaderResourceView* GetDdsTexture(DdsTextureResource resource);
+	ObjModel* GetObjModel(ObjModelResource resource);
 	SkyDome* GetSkyDome();
-	void RenderModel(ModelResource resource);
+	void RenderObjModel(ObjModelResource resource);
 
 private:
 	ID3D11Device* m_pDevice;
 	ID3D11DeviceContext* m_pImmediateContext;
-	std::vector<ID3D11ShaderResourceView*> m_textures;
-	std::vector<Model*> m_models;
+	std::vector<ID3D11ShaderResourceView*> m_ddsTextures;
+	std::vector<ObjModel*> m_objModels;
 	SkyDome *m_pSkyDome;
 
-	HRESULT LoadTexture(TextureResource resource);
-	bool LoadModel(ModelResource resource);
+	HRESULT LoadDdsTexture(DdsTextureResource resource);
+	bool LoadObjModel(ObjModelResource resource);
 };

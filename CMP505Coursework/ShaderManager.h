@@ -15,7 +15,7 @@ public:
 	~ShaderManager();
 
 	HRESULT InitializeShaders();
-	bool RenderModel(Model* pModel, Camera* pCamera);
+	bool RenderModel(ObjModel* pModel, Camera* pCamera);
 	bool RenderSkyDome(SkyDome *pSkyDome, Camera* pCamera);
 
 private:

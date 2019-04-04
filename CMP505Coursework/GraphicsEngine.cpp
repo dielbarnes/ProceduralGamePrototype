@@ -461,10 +461,10 @@ bool GraphicsEngine::Render(const float& fDeltaTime)
 	// Render models
 
 	// Set the vertex and index buffers and the primitive topology
-	m_pResourceManager->RenderModel(ModelResource::GroundModel);
+	m_pResourceManager->RenderObjModel(ObjModelResource::GroundModel);
 	// Set the vertex input layout, constant buffers, texture, sampler state, and shaders
 	// Draw
-	if (!m_pShaderManager->RenderModel(m_pResourceManager->GetModel(ModelResource::GroundModel), m_pCamera))
+	if (!m_pShaderManager->RenderModel(m_pResourceManager->GetObjModel(ObjModelResource::GroundModel), m_pCamera))
 	{
 		return false;
 	}
@@ -488,7 +488,7 @@ bool GraphicsEngine::Render(const float& fDeltaTime)
 	m_pResourceManager->GetSkyDome()->SetWorldMatrix(skyTranslationMatrix);
 
 	// Render sky dome
-	m_pResourceManager->RenderModel(ModelResource::SkyDomeModel);
+	m_pResourceManager->RenderObjModel(ObjModelResource::SkyDomeModel);
 	if (!m_pShaderManager->RenderSkyDome(m_pResourceManager->GetSkyDome(), m_pCamera))
 	{
 		return false;

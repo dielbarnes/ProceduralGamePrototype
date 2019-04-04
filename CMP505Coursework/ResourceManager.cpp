@@ -15,11 +15,11 @@ ResourceManager::ResourceManager(ID3D11Device &device, ID3D11DeviceContext &imme
 
 ResourceManager::~ResourceManager()
 {
-	for (auto& texture : m_textures)
+	for (auto& texture : m_ddsTextures)
 	{
 		SAFE_RELEASE(texture);
 	}
-	for (auto& model : m_models)
+	for (auto& model : m_objModels)
 	{
 		SAFE_DELETE(model);
 	}
@@ -32,24 +32,24 @@ bool ResourceManager::LoadResources()
 
 	// Ground
 
-	HRESULT result = LoadTexture(TextureResource::GroundTexture);
+	HRESULT result = LoadDdsTexture(DdsTextureResource::GroundTexture);
 	if (FAILED(result))
 	{
 		Utils::ShowError("Failed to load ground texture.", result);
 		return false;
 	}
 
-	if (!LoadModel(ModelResource::GroundModel))
+	if (!LoadObjModel(ObjModelResource::GroundModel))
 	{
 		MessageBox(0, "Failed to load ground model.", "", 0);
 		return false;
 	}
 
-	m_models[ModelResource::GroundModel]->SetTexture(*m_textures[TextureResource::GroundTexture]);
+	m_objModels[ObjModelResource::GroundModel]->SetTexture(*m_ddsTextures[DdsTextureResource::GroundTexture]);
 
 	// Sky Dome
 
-	if (!LoadModel(ModelResource::SkyDomeModel))
+	if (!LoadObjModel(ObjModelResource::SkyDomeModel))
 	{
 		MessageBox(0, "Failed to load sky dome model.", "", 0);
 		return false;
@@ -61,7 +61,7 @@ bool ResourceManager::LoadResources()
 
 	// Initialize the vertex, index, and instance buffers
 
-	if (!m_models[ModelResource::GroundModel]->InitializeBuffers(m_pDevice, 1))
+	if (!m_objModels[ObjModelResource::GroundModel]->InitializeBuffers(m_pDevice, 1))
 	{
 		MessageBox(0, "Failed to initialize ground vertex and index buffers.", "", 0);
 		return false;
@@ -77,12 +77,12 @@ bool ResourceManager::LoadResources()
 
 	XMMATRIX groundTranslationMatrix = XMMatrixTranslation(0.0f, 0.0f, -5.0f);
 	XMMATRIX groundScalingMatrix = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-	m_models[ModelResource::GroundModel]->TransformWorldMatrix(groundTranslationMatrix, XMMatrixIdentity(), groundScalingMatrix);
+	m_objModels[ObjModelResource::GroundModel]->TransformWorldMatrix(groundTranslationMatrix, XMMatrixIdentity(), groundScalingMatrix);
 
 	return true;
 }
 
-HRESULT ResourceManager::LoadTexture(TextureResource resource)
+HRESULT ResourceManager::LoadDdsTexture(DdsTextureResource resource)
 {
 	HRESULT result = S_OK;
 
@@ -94,6 +94,9 @@ HRESULT ResourceManager::LoadTexture(TextureResource resource)
 	case GroundTexture:
 		filename = L"Resources/grass.dds";
 		break;
+	case KnightTexture:
+		filename = L"Resources/knight.dds";
+		break;
 	}
 
 	ID3D11ShaderResourceView* texture;
@@ -104,25 +107,25 @@ HRESULT ResourceManager::LoadTexture(TextureResource resource)
 	}
 
 	// Store texture in vector
-	m_textures.push_back(texture);
+	m_ddsTextures.push_back(texture);
 
 	return result;
 }
 
-bool ResourceManager::LoadModel(ModelResource resource)
+bool ResourceManager::LoadObjModel(ObjModelResource resource)
 {
 	// Reference:
 	// RasterTek Tutorial 8: Loading Maya 2011 Models (http://www.rastertek.com/dx11tut08.html)
 
 	// Create model
-	Model* model = nullptr;
+	ObjModel* model = nullptr;
 	if (resource == SkyDomeModel)
 	{
 		m_pSkyDome = new SkyDome();
 	}
 	else
 	{
-		model = new Model();
+		model = new ObjModel();
 	}
 
 	// Open file
@@ -199,7 +202,7 @@ bool ResourceManager::LoadModel(ModelResource resource)
 	if (resource != SkyDomeModel)
 	{
 		// Store model in vector
-		m_models.push_back(model);
+		m_objModels.push_back(model);
 	}
 
 	return true;
@@ -209,14 +212,14 @@ bool ResourceManager::LoadModel(ModelResource resource)
 
 #pragma region Getters
 
-ID3D11ShaderResourceView* ResourceManager::GetTexture(TextureResource resource)
+ID3D11ShaderResourceView* ResourceManager::GetDdsTexture(DdsTextureResource resource)
 {
-	return m_textures[resource];
+	return m_ddsTextures[resource];
 }
 
-Model* ResourceManager::GetModel(ModelResource resource)
+ObjModel* ResourceManager::GetObjModel(ObjModelResource resource)
 {
-	return m_models[resource];
+	return m_objModels[resource];
 }
 
 SkyDome* ResourceManager::GetSkyDome()
@@ -228,7 +231,7 @@ SkyDome* ResourceManager::GetSkyDome()
 
 #pragma region Render
 
-void ResourceManager::RenderModel(ModelResource resource)
+void ResourceManager::RenderObjModel(ObjModelResource resource)
 {
 	if (resource == SkyDomeModel)
 	{
@@ -236,7 +239,7 @@ void ResourceManager::RenderModel(ModelResource resource)
 	}
 	else
 	{
-		m_models[resource]->Render(m_pImmediateContext);
+		m_objModels[resource]->Render(m_pImmediateContext);
 	}
 }
 
