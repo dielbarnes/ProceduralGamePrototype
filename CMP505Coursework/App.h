@@ -32,7 +32,7 @@ private:
 	GraphicsEngine* m_pGraphicsEngine;
 	Timer* m_pTimer;
 
-	bool InitMainWindow(int& iScreenWidth, int& iScreenHeight);
+	bool InitMainWindow(const int iScreenWidth, const int iScreenHeight);
 	void CleanUpMainWindow();
 };
 

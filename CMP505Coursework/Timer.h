@@ -2,10 +2,13 @@
 // Timer.h
 // Copyright © 2019 Diel Barnes. All rights reserved.
 //
+// Reference:
+// DirectX-Engine (https://github.com/Pindrought/DirectX-Engine)
+//
 
 #pragma once
 
-#include <windows.h>
+#include <chrono>
 
 class Timer
 {
@@ -13,11 +16,10 @@ public:
 	Timer();
 	~Timer();
 
-	void Update();
 	float GetDeltaTime();
+	void Update();
 
 private:
-	float m_fSecondsPerCount;
-	__int64 m_iPreviousTime;
-	float m_fDeltaTime;
+	std::chrono::time_point<std::chrono::steady_clock> m_previousTime;
+	float fDeltaTime;
 };

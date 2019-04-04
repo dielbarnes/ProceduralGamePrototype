@@ -15,11 +15,11 @@ ResourceManager::ResourceManager(ID3D11Device &device, ID3D11DeviceContext &imme
 
 ResourceManager::~ResourceManager()
 {
-	for (auto& texture : m_ddsTextures)
+	for (auto &texture : m_ddsTextures)
 	{
 		SAFE_RELEASE(texture);
 	}
-	for (auto& model : m_objModels)
+	for (auto &model : m_objModels)
 	{
 		SAFE_DELETE(model);
 	}

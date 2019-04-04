@@ -25,11 +25,11 @@ public:
 	GraphicsEngine();
 	~GraphicsEngine();
 
-	bool Initialize(int& iScreenWidth, int& iScreenHeight, HWND hWindow);
+	bool Initialize(const int iScreenWidth, const int iScreenHeight, HWND hWindow);
 	void OnMouseDown(int x, int y, HWND hWindow);
 	void OnMouseUp();
 	void OnMouseMove(WPARAM buttonState, int x, int y);
-	bool Render(const float& fDeltaTime);
+	bool Render(const float fDeltaTime);
 
 private:
 	ID3D11Device* m_pDevice;
@@ -50,6 +50,6 @@ private:
 	ResourceManager* m_pResourceManager;
 	ShaderManager* m_pShaderManager;
 
-	HRESULT InitDirect3D(int& iScreenWidth, int& iScreenHeight, HWND hWindow);
-	void HandleKeyboardInput(const float& fDeltaTime);
+	HRESULT InitDirect3D(const int iScreenWidth, const int iScreenHeight, HWND hWindow);
+	void HandleKeyboardInput(const float fDeltaTime);
 };

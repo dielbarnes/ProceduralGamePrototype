@@ -47,7 +47,7 @@ GraphicsEngine::~GraphicsEngine()
 	SAFE_DELETE(m_pShaderManager)
 }
 
-bool GraphicsEngine::Initialize(int& iScreenWidth, int& iScreenHeight, HWND hWindow)
+bool GraphicsEngine::Initialize(const int iScreenWidth, const int iScreenHeight, HWND hWindow)
 {
 	// Initialize camera
 	XMFLOAT3 position = XMFLOAT3(0.0f, 8.0f, -22.0f);
@@ -82,7 +82,7 @@ bool GraphicsEngine::Initialize(int& iScreenWidth, int& iScreenHeight, HWND hWin
 	return true;
 }
 
-HRESULT GraphicsEngine::InitDirect3D(int& iScreenWidth, int& iScreenHeight, HWND hWindow)
+HRESULT GraphicsEngine::InitDirect3D(const int iScreenWidth, const int iScreenHeight, HWND hWindow)
 {
 	HRESULT result = S_OK;
 
@@ -384,26 +384,56 @@ HRESULT GraphicsEngine::InitDirect3D(int& iScreenWidth, int& iScreenHeight, HWND
 
 #pragma region Input Handling
 
-void GraphicsEngine::HandleKeyboardInput(const float& fDeltaTime)
+void GraphicsEngine::HandleKeyboardInput(const float fDeltaTime)
 {
 	if (GetAsyncKeyState('W') & 0x8000)
 	{
-		m_pCamera->MoveForward(fDeltaTime, 5.0f);
+		m_pCamera->MoveForward(fDeltaTime, 0.02f);
 	}
 
 	if (GetAsyncKeyState('S') & 0x8000)
 	{
-		m_pCamera->MoveForward(fDeltaTime, -5.0f);
+		m_pCamera->MoveBackward(fDeltaTime, 0.02f);
 	}
 
 	if (GetAsyncKeyState('A') & 0x8000)
 	{
-		m_pCamera->Strafe(fDeltaTime, -5.0f);
+		m_pCamera->MoveLeft(fDeltaTime, 0.02f);
 	}
 
 	if (GetAsyncKeyState('D') & 0x8000)
 	{
-		m_pCamera->Strafe(fDeltaTime, 5.0f);
+		m_pCamera->MoveRight(fDeltaTime, 0.02f);
+	}
+
+	if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+	{
+		m_pCamera->MoveUp(fDeltaTime, 0.02f);
+	}
+
+	if (GetAsyncKeyState('Z') & 0x8000)
+	{
+		m_pCamera->MoveDown(fDeltaTime, 0.02f);
+	}
+
+	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+	{
+		m_pCamera->Rotate(fDeltaTime * -0.002f, 0.0f);
+	}
+
+	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+	{
+		m_pCamera->Rotate(fDeltaTime * 0.002f, 0.0f);
+	}
+
+	if (GetAsyncKeyState(VK_UP) & 0x8000)
+	{
+		m_pCamera->Rotate(0.0f, fDeltaTime * -0.002f);
+	}
+
+	if (GetAsyncKeyState(VK_DOWN) & 0x8000)
+	{
+		m_pCamera->Rotate(0.0f, fDeltaTime * 0.002f);
 	}
 }
 
@@ -429,7 +459,7 @@ void GraphicsEngine::OnMouseMove(WPARAM buttonState, int x, int y)
 	{
 		float fDeltaX = float(x - m_mousePosition.x);
 		float fDeltaY = float(y - m_mousePosition.y);
-		m_pCamera->Rotate(fDeltaX / 5.0f, fDeltaY / 5.0f);
+		m_pCamera->Rotate(fDeltaX * 0.01f, fDeltaY * 0.01f);
 	}
 
 	m_mousePosition.x = x;
@@ -440,7 +470,7 @@ void GraphicsEngine::OnMouseMove(WPARAM buttonState, int x, int y)
 
 #pragma region Render
 
-bool GraphicsEngine::Render(const float& fDeltaTime)
+bool GraphicsEngine::Render(const float fDeltaTime)
 {
 	// Clear the back buffer
 	float color[4] = COLOR_F4(0.0f, 0.0f, 0.0f, 1.0f) // Background color

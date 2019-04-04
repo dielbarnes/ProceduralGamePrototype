@@ -5,6 +5,9 @@
 
 #include "App.h"
 
+#define SCREEN_WIDTH 1024
+#define SCREEN_HEIGHT 768
+
 #pragma region Init
 
 App::App(HINSTANCE hInstance)
@@ -28,16 +31,13 @@ App::~App()
 
 bool App::Initialize()
 {
-	int iScreenWidth = 1024;
-	int iScreenHeight = 768;
-
-	if (!InitMainWindow(iScreenWidth, iScreenHeight))
+	if (!InitMainWindow(SCREEN_WIDTH, SCREEN_HEIGHT))
 	{
 		return false;
 	}
 
 	m_pGraphicsEngine = new GraphicsEngine();
-	if (!m_pGraphicsEngine->Initialize(iScreenWidth, iScreenHeight, m_hMainWindow))
+	if (!m_pGraphicsEngine->Initialize(SCREEN_WIDTH, SCREEN_HEIGHT, m_hMainWindow))
 	{
 		return false;
 	}
@@ -47,7 +47,7 @@ bool App::Initialize()
 	return true;
 }
 
-bool App::InitMainWindow(int& iScreenWidth, int& iScreenHeight)
+bool App::InitMainWindow(const int iScreenWidth, const int iScreenHeight)
 {
 	// Register the window class
 

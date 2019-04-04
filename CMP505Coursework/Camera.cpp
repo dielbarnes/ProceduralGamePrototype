@@ -2,6 +2,9 @@
 // Camera.cpp
 // Copyright © 2019 Diel Barnes. All rights reserved.
 //
+// Reference:
+// DirectX-Engine (https://github.com/Pindrought/DirectX-Engine)
+//
 
 #include "Camera.h"
 
@@ -10,8 +13,11 @@
 Camera::Camera(const XMFLOAT3 position, const float fAspectRatio)
 {
 	// Set the initial camera position
-	m_position = position;
-	m_rotation = XMFLOAT3(20.0f, 0.0f, 0.0f);
+	m_vPosition.m128_f32[0] = position.x;
+	m_vPosition.m128_f32[1] = position.y;
+	m_vPosition.m128_f32[2] = position.z;
+	m_vPosition.m128_f32[3] = 0;
+	m_rotation = XMFLOAT3(20 / 180 * XM_PI, 0.0f, 0.0f);
 
 	// Initialize the projection matrix
 	m_projectionMatrix = XMMatrixPerspectiveFovLH( // Build a left-handed perspective projection matrix	
@@ -31,7 +37,7 @@ Camera::~Camera()
 
 XMFLOAT3 Camera::GetPosition()
 {
-	return m_position;
+	return XMFLOAT3(m_vPosition.m128_f32[0], m_vPosition.m128_f32[1], m_vPosition.m128_f32[2]);
 }
 
 XMMATRIX Camera::GetViewMatrix()
@@ -48,22 +54,74 @@ XMMATRIX Camera::GetProjectionMatrix()
 
 #pragma region Move/Rotate
 
-void Camera::MoveForward(const float& fDeltaTime, const float& fValue)
+void Camera::MoveForward(const float fDeltaTime, const float fValue)
 {
-	XMVECTOR temp = XMLoadFloat3(&m_position) + XMMatrixInverse(nullptr, m_viewMatrix).r[2] * fDeltaTime * fValue;
-	XMStoreFloat3(&m_position, temp);
+	m_vForward.m128_f32[1] = 0;
+	XMVECTOR offset = m_vForward * fDeltaTime * fValue;
+	Move(offset);
 }
 
-void Camera::Strafe(const float& fDeltaTime, const float& fValue)
+void Camera::MoveBackward(const float fDeltaTime, const float fValue)
 {
-	XMVECTOR temp = XMLoadFloat3(&m_position) + XMMatrixInverse(nullptr, m_viewMatrix).r[0] * fDeltaTime * fValue;
-	XMStoreFloat3(&m_position, temp);
+	m_vBackward.m128_f32[1] = 0;
+	XMVECTOR offset = m_vBackward * fDeltaTime * fValue;
+	Move(offset);
 }
 
-void Camera::Rotate(const float fDeltaX, const float fDeltaY)
+void Camera::MoveLeft(const float fDeltaTime, const float fValue)
 {
-	m_rotation.x += fDeltaY;
-	m_rotation.y += fDeltaX;
+	m_vLeft.m128_f32[1] = 0;
+	XMVECTOR offset = m_vLeft * fDeltaTime * fValue;
+	Move(offset);
+}
+
+void Camera::MoveRight(const float fDeltaTime, const float fValue)
+{
+	m_vRight.m128_f32[1] = 0;
+	XMVECTOR offset = m_vRight * fDeltaTime * fValue;
+	Move(offset);
+}
+
+void Camera::MoveUp(const float fDeltaTime, const float fValue)
+{
+	XMVECTOR offset = { 0.0f, fDeltaTime * fValue, 0.0f };
+	Move(offset);
+}
+
+void Camera::MoveDown(const float fDeltaTime, const float fValue)
+{
+	XMVECTOR offset = { 0.0f, fDeltaTime * -fValue, 0.0f };
+	Move(offset);
+}
+
+void Camera::Move(const XMVECTOR vOffset)
+{
+	m_vPosition += vOffset;
+	m_vPosition.m128_f32[3] = 0;
+}
+
+void Camera::Rotate(const float fXOffset, const float fYOffset)
+{
+	m_rotation.x += fYOffset;
+	m_rotation.y += fXOffset;
+
+	if (m_rotation.x < -XM_PIDIV2)
+	{
+		m_rotation.x = -XM_PIDIV2;
+	}
+	else if (m_rotation.x > XM_PIDIV2)
+	{
+		m_rotation.x = XM_PIDIV2;
+	}
+
+	if (m_rotation.y < 0)
+	{
+		m_rotation.y += XM_2PI;
+	}
+	else if (m_rotation.y > XM_2PI)
+	{
+		m_rotation.y -= XM_2PI;
+	}
 }
 
 #pragma endregion
@@ -72,25 +130,23 @@ void Camera::Rotate(const float fDeltaX, const float fDeltaY)
 
 void Camera::Update()
 {
-	XMVECTOR vPosition = XMLoadFloat3(&m_position); // Position of the camera in the world
-	XMVECTOR vLook = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f); // Where the camera is looking by default
-	XMVECTOR vUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f); // The vector that points upwards
-
 	// Apply rotation
-
-	float pitch = m_rotation.x * XM_PI / 180;
-	float yaw = m_rotation.y * XM_PI / 180;
-	float roll = m_rotation.z * XM_PI / 180;
-	XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
-
-	vLook = XMVector3TransformCoord(vLook, rotationMatrix);
-	vUp = XMVector3TransformCoord(vUp, rotationMatrix);
+	XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(m_rotation.x, m_rotation.y, m_rotation.z);
+	XMVECTOR vLook = XMVector3TransformCoord(DEFAULT_FORWARD_VECTOR, rotationMatrix); // Where the camera is looking
+	XMVECTOR vUp = XMVector3TransformCoord(DEFAULT_UP_VECTOR, rotationMatrix);
 
 	// Apply translation
-	vLook = XMVectorAdd(vPosition, vLook);
+	vLook += m_vPosition;
 
 	// Build view matrix for a left-handed coordinate system
-	m_viewMatrix = XMMatrixLookAtLH(vPosition, vLook, vUp);
+	m_viewMatrix = XMMatrixLookAtLH(m_vPosition, vLook, vUp);
+
+	// Update direction vectors
+	rotationMatrix = XMMatrixRotationRollPitchYaw(0, m_rotation.y, m_rotation.z);
+	m_vForward = XMVector3TransformCoord(DEFAULT_FORWARD_VECTOR, rotationMatrix);
+	m_vBackward = XMVector3TransformCoord(DEFAULT_BACKWARD_VECTOR, rotationMatrix);
+	m_vLeft = XMVector3TransformCoord(DEFAULT_LEFT_VECTOR, rotationMatrix);
+	m_vRight = XMVector3TransformCoord(DEFAULT_RIGHT_VECTOR, rotationMatrix);
 }
 
 #pragma endregion

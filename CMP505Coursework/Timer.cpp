@@ -2,31 +2,30 @@
 // Timer.cpp
 // Copyright © 2019 Diel Barnes. All rights reserved.
 //
+// Reference:
+// DirectX-Engine (https://github.com/Pindrought/DirectX-Engine)
+//
 
 #include "Timer.h"
 
 Timer::Timer()
 {
-	__int64 iCountsPerSecond = 0;
-	QueryPerformanceFrequency((LARGE_INTEGER*)&iCountsPerSecond);
-	m_fSecondsPerCount = 1.0f / (float)iCountsPerSecond;
-
-	m_iPreviousTime = iCountsPerSecond;
+	m_previousTime = std::chrono::high_resolution_clock::now();
 }
 
 Timer::~Timer()
 {
 }
 
-void Timer::Update()
-{
-	__int64 iCurrentTime = 0;
-	QueryPerformanceCounter((LARGE_INTEGER*)&iCurrentTime);
-	m_fDeltaTime = (iCurrentTime - m_iPreviousTime) * m_fSecondsPerCount;
-	m_iPreviousTime = iCurrentTime;
-}
-
 float Timer::GetDeltaTime()
 {
-	return m_fDeltaTime;
+	return fDeltaTime;
+}
+
+void Timer::Update()
+{
+	auto currentTime = std::chrono::high_resolution_clock::now();
+	auto elapsedMilliseconds = std::chrono::duration<float, std::milli>(currentTime - m_previousTime);
+	fDeltaTime = elapsedMilliseconds.count();
+	m_previousTime = currentTime;
 }
