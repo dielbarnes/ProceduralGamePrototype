@@ -7,10 +7,10 @@
 
 #pragma region Init
 
-Shader::Shader(ID3D11Device &device, ID3D11DeviceContext &immediateContext)
+Shader::Shader(ID3D11Device *device, ID3D11DeviceContext *immediateContext)
 {
-	m_pDevice = &device;
-	m_pImmediateContext = &immediateContext;
+	m_pDevice = device;
+	m_pImmediateContext = immediateContext;
 	m_pVertexShader = nullptr;
 	m_pPixelShader = nullptr;
 	m_pVertexInputLayout = nullptr;
@@ -30,7 +30,7 @@ HRESULT Shader::Initialize(LPCWSTR vertexShaderFilename, LPCSTR vertexShaderEntr
 	HRESULT result = S_OK;
 
 	// Compile the vertex shader
-	ID3DBlob* pCompiledVertexShader;
+	ID3DBlob *pCompiledVertexShader;
 	result = CompileShaderFromFile(vertexShaderFilename, vertexShaderEntryPoint, "vs_5_0", &pCompiledVertexShader);
 	if (FAILED(result))
 	{
@@ -38,7 +38,7 @@ HRESULT Shader::Initialize(LPCWSTR vertexShaderFilename, LPCSTR vertexShaderEntr
 		return result;
 	}
 
-	const void* ppCompiledVertexShader = pCompiledVertexShader->GetBufferPointer();
+	const void *ppCompiledVertexShader = pCompiledVertexShader->GetBufferPointer();
 	SIZE_T compiledVertexShaderSize = pCompiledVertexShader->GetBufferSize();
 
 	// Create the vertex shader
@@ -53,7 +53,7 @@ HRESULT Shader::Initialize(LPCWSTR vertexShaderFilename, LPCSTR vertexShaderEntr
 	}
 
 	// Compile the pixel shader
-	ID3DBlob* pCompiledPixelShader;
+	ID3DBlob *pCompiledPixelShader;
 	result = CompileShaderFromFile(pixelShaderFilename, pixelShaderEntryPoint, "ps_5_0", &pCompiledPixelShader);
 	if (FAILED(result))
 	{
@@ -61,7 +61,7 @@ HRESULT Shader::Initialize(LPCWSTR vertexShaderFilename, LPCSTR vertexShaderEntr
 		return result;
 	}
 
-	const void* ppCompiledPixelShader = pCompiledPixelShader->GetBufferPointer();
+	const void *ppCompiledPixelShader = pCompiledPixelShader->GetBufferPointer();
 	SIZE_T compiledPixelShaderSize = pCompiledPixelShader->GetBufferSize();
 
 	// Create the pixel shader
@@ -75,13 +75,17 @@ HRESULT Shader::Initialize(LPCWSTR vertexShaderFilename, LPCSTR vertexShaderEntr
 		return result;
 	}
 
-	// Create the vertex input layout (should be the same as Vertex struct)
+	SAFE_RELEASE(pCompiledPixelShader)
+
+	// Create the vertex input layout (should be the same as vertex struct)
 	result = m_pDevice->CreateInputLayout(vertexInputDesc, uiElementCount, ppCompiledVertexShader, compiledVertexShaderSize, &m_pVertexInputLayout);
 	if (FAILED(result))
 	{
 		Utils::ShowError("Failed to create vertex input layout.", result);
 		return result;
 	}
+
+	SAFE_RELEASE(pCompiledVertexShader)
 
 	// Create the matrix constant buffer
 	// ByteWidth always needs to be a multiple of 16 if using D3D11_BIND_CONSTANT_BUFFER or CreateBuffer will fail
@@ -97,18 +101,14 @@ HRESULT Shader::Initialize(LPCWSTR vertexShaderFilename, LPCSTR vertexShaderEntr
 		return result;
 	}
 
-	// Release
-	SAFE_RELEASE(pCompiledPixelShader)
-	SAFE_RELEASE(pCompiledVertexShader)
-
 	return result;
 }
 
-HRESULT Shader::CompileShaderFromFile(LPCWSTR filename, LPCSTR entryPoint, LPCSTR target, ID3DBlob** ppCompiledShader)
+HRESULT Shader::CompileShaderFromFile(LPCWSTR filename, LPCSTR entryPoint, LPCSTR target, ID3DBlob **ppCompiledShader)
 {
 	HRESULT result = S_OK;
 
-	ID3DBlob* pError = nullptr;
+	ID3DBlob *pError = nullptr;
 	result = D3DCompileFromFile(filename,
 								nullptr,										 // Array of shader macros
 								nullptr,										 // Include interface the compiler will use if the shader contains #include
@@ -152,12 +152,12 @@ HRESULT Shader::SetMatrixBuffer(XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMAT
 	}
 
 	// Get a pointer to the matrix buffer data
-	MatrixBuffer* matrixBufferData = (MatrixBuffer*)mappedResource.pData;
+	MatrixBuffer *pMatrixBufferData = (MatrixBuffer*)mappedResource.pData;
 
 	// Copy the matrices into the matrix buffer
-	matrixBufferData->worldMatrix = XMMatrixTranspose(worldMatrix);
-	matrixBufferData->viewMatrix = XMMatrixTranspose(viewMatrix);
-	matrixBufferData->projectionMatrix = XMMatrixTranspose(projectionMatrix);
+	pMatrixBufferData->worldMatrix = XMMatrixTranspose(worldMatrix);
+	pMatrixBufferData->viewMatrix = XMMatrixTranspose(viewMatrix);
+	pMatrixBufferData->projectionMatrix = XMMatrixTranspose(projectionMatrix);
 
 	// Unlock the matrix buffer
 	m_pImmediateContext->Unmap(m_pMatrixBuffer, 0);

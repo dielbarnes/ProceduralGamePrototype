@@ -22,12 +22,12 @@ struct ColorBuffer // For pixel shader
 class SkyDomeShader : public Shader
 {
 public:
-	SkyDomeShader(ID3D11Device &device, ID3D11DeviceContext &immediateContext);
+	SkyDomeShader(ID3D11Device *device, ID3D11DeviceContext *immediateContext);
 	~SkyDomeShader();
 
 	HRESULT Initialize();
-	bool Render(SkyDome* pSkyDome, Camera* pCamera);
+	bool Render(SkyDome *pSkyDome, Camera *pCamera);
 
 private:
-	ID3D11Buffer* m_pColorBuffer;
+	ID3D11Buffer *m_pColorBuffer;
 };

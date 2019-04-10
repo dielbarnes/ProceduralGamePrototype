@@ -7,10 +7,10 @@
 
 #pragma region Init
 
-ResourceManager::ResourceManager(ID3D11Device &device, ID3D11DeviceContext &immediateContext)
+ResourceManager::ResourceManager(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext)
 {
-	m_pDevice = &device;
-	m_pImmediateContext = &immediateContext;
+	m_pDevice = pDevice;
+	m_pImmediateContext = pImmediateContext;
 }
 
 ResourceManager::~ResourceManager()
@@ -19,7 +19,7 @@ ResourceManager::~ResourceManager()
 	{
 		SAFE_RELEASE(texture);
 	}
-	for (auto &model : m_objModels)
+	for (auto &model : m_txtModels)
 	{
 		SAFE_DELETE(model);
 	}
@@ -39,17 +39,18 @@ bool ResourceManager::LoadResources()
 		return false;
 	}
 
-	if (!LoadObjModel(ObjModelResource::GroundModel))
+	if (!LoadTxtModel(TxtModelResource::GroundModel))
 	{
 		MessageBox(0, "Failed to load ground model.", "", 0);
 		return false;
 	}
 
-	m_objModels[ObjModelResource::GroundModel]->SetTexture(*m_ddsTextures[DdsTextureResource::GroundTexture]);
+	m_txtModels[TxtModelResource::GroundModel]->SetTexture(m_ddsTextures[DdsTextureResource::GroundTexture]);
+	m_txtModels[TxtModelResource::GroundModel]->SetTextureTileCount(4, 4);
 
 	// Sky Dome
 
-	if (!LoadObjModel(ObjModelResource::SkyDomeModel))
+	if (!LoadTxtModel(TxtModelResource::SkyDomeModel))
 	{
 		MessageBox(0, "Failed to load sky dome model.", "", 0);
 		return false;
@@ -61,7 +62,7 @@ bool ResourceManager::LoadResources()
 
 	// Initialize the vertex, index, and instance buffers
 
-	if (!m_objModels[ObjModelResource::GroundModel]->InitializeBuffers(m_pDevice, 1))
+	if (!m_txtModels[TxtModelResource::GroundModel]->InitializeBuffers(m_pDevice, 1))
 	{
 		MessageBox(0, "Failed to initialize ground vertex and index buffers.", "", 0);
 		return false;
@@ -75,9 +76,9 @@ bool ResourceManager::LoadResources()
 
 	// Transform models
 
-	XMMATRIX groundTranslationMatrix = XMMatrixTranslation(0.0f, 0.0f, -5.0f);
-	XMMATRIX groundScalingMatrix = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-	m_objModels[ObjModelResource::GroundModel]->TransformWorldMatrix(groundTranslationMatrix, XMMatrixIdentity(), groundScalingMatrix);
+	XMMATRIX groundTranslationMatrix = XMMatrixTranslation(0.0f, 0.0f, 0.0f);
+	XMMATRIX groundScalingMatrix = XMMatrixScaling(0.28f, 0.28f, 0.28f);
+	m_txtModels[TxtModelResource::GroundModel]->TransformWorldMatrix(groundTranslationMatrix, XMMatrixIdentity(), groundScalingMatrix);
 
 	return true;
 }
@@ -88,44 +89,41 @@ HRESULT ResourceManager::LoadDdsTexture(DdsTextureResource resource)
 
 	// Create texture
 
-	const wchar_t* filename = L"";
+	const wchar_t *filename = L"";
 	switch (resource)
 	{
 	case GroundTexture:
-		filename = L"Resources/grass.dds";
-		break;
-	case KnightTexture:
-		filename = L"Resources/knight.dds";
+		filename = L"Resources/cobblestone.dds";
 		break;
 	}
 
-	ID3D11ShaderResourceView* texture;
-	result = CreateDDSTextureFromFile(m_pDevice, m_pImmediateContext, filename, nullptr, &texture, 0, nullptr);
+	ID3D11ShaderResourceView *pTexture;
+	result = CreateDDSTextureFromFile(m_pDevice, m_pImmediateContext, filename, nullptr, &pTexture, 0, nullptr);
 	if (FAILED(result))
 	{
 		return result;
 	}
 
 	// Store texture in vector
-	m_ddsTextures.push_back(texture);
+	m_ddsTextures.push_back(pTexture);
 
 	return result;
 }
 
-bool ResourceManager::LoadObjModel(ObjModelResource resource)
+bool ResourceManager::LoadTxtModel(TxtModelResource resource)
 {
 	// Reference:
 	// RasterTek Tutorial 8: Loading Maya 2011 Models (http://www.rastertek.com/dx11tut08.html)
 
 	// Create model
-	ObjModel* model = nullptr;
+	TxtModel *pModel = nullptr;
 	if (resource == SkyDomeModel)
 	{
 		m_pSkyDome = new SkyDome();
 	}
 	else
 	{
-		model = new ObjModel();
+		pModel = new TxtModel();
 	}
 
 	// Open file
@@ -166,8 +164,8 @@ bool ResourceManager::LoadObjModel(ObjModelResource resource)
 	}
 	else
 	{
-		model->SetVertexCount(iVertexCount);
-		model->SetIndexCount(iVertexCount);
+		pModel->SetVertexCount(iVertexCount);
+		pModel->SetIndexCount(iVertexCount);
 	}
 
 	// Read up to the beginning of the vertex data
@@ -180,7 +178,7 @@ bool ResourceManager::LoadObjModel(ObjModelResource resource)
 	file.get(input);
 
 	// Read the vertex data
-	VertexData* vertexData = new VertexData[iVertexCount];
+	VertexData *vertexData = new VertexData[iVertexCount];
 	for (int i = 0; i < iVertexCount; i++)
 	{
 		file >> vertexData[i].x >> vertexData[i].y >> vertexData[i].z;
@@ -193,7 +191,7 @@ bool ResourceManager::LoadObjModel(ObjModelResource resource)
 	}
 	else
 	{
-		model->SetVertexData(vertexData);
+		pModel->SetVertexData(vertexData);
 	}
 
 	// Close file
@@ -202,7 +200,7 @@ bool ResourceManager::LoadObjModel(ObjModelResource resource)
 	if (resource != SkyDomeModel)
 	{
 		// Store model in vector
-		m_objModels.push_back(model);
+		m_txtModels.push_back(pModel);
 	}
 
 	return true;
@@ -212,14 +210,14 @@ bool ResourceManager::LoadObjModel(ObjModelResource resource)
 
 #pragma region Getters
 
-ID3D11ShaderResourceView* ResourceManager::GetDdsTexture(DdsTextureResource resource)
+ID3D11ShaderResourceView* ResourceManager::GetTexture(DdsTextureResource resource)
 {
 	return m_ddsTextures[resource];
 }
 
-ObjModel* ResourceManager::GetObjModel(ObjModelResource resource)
+TxtModel* ResourceManager::GetModel(TxtModelResource resource)
 {
-	return m_objModels[resource];
+	return m_txtModels[resource];
 }
 
 SkyDome* ResourceManager::GetSkyDome()
@@ -231,7 +229,7 @@ SkyDome* ResourceManager::GetSkyDome()
 
 #pragma region Render
 
-void ResourceManager::RenderObjModel(ObjModelResource resource)
+void ResourceManager::RenderModel(TxtModelResource resource)
 {
 	if (resource == SkyDomeModel)
 	{
@@ -239,7 +237,7 @@ void ResourceManager::RenderObjModel(ObjModelResource resource)
 	}
 	else
 	{
-		m_objModels[resource]->Render(m_pImmediateContext);
+		m_txtModels[resource]->Render(m_pImmediateContext);
 	}
 }
 

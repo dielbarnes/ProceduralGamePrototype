@@ -11,14 +11,14 @@
 class ShaderManager
 {
 public:
-	ShaderManager(ID3D11Device &device, ID3D11DeviceContext &immediateContext);
+	ShaderManager(ID3D11Device *device, ID3D11DeviceContext *immediateContext);
 	~ShaderManager();
 
 	HRESULT InitializeShaders();
-	bool RenderModel(ObjModel* pModel, Camera* pCamera);
-	bool RenderSkyDome(SkyDome *pSkyDome, Camera* pCamera);
+	bool RenderModel(TxtModel *pModel, Camera *pCamera);
+	bool RenderSkyDome(SkyDome *pSkyDome, Camera *pCamera);
 
 private:
-	LightShader* m_pLightShader;
-	SkyDomeShader* m_pSkyDomeShader;
+	LightShader *m_pLightShader;
+	SkyDomeShader *m_pSkyDomeShader;
 };

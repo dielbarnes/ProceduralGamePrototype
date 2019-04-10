@@ -8,10 +8,9 @@
 void Utils::ShowError(LPCTSTR message, HRESULT result)
 {
 	_com_error error(result);
-	LPCTSTR errorMessage = error.ErrorMessage();
-
-	std::string text;
-	text = std::string(message) + "\n\n" + std::string(errorMessage);
-
-	MessageBox(0, text.c_str(), "", 0);
+	std::string text = std::string(message) + "\n\n" + std::string(error.ErrorMessage());
+	MessageBox(0,				// Owner window of the message box
+			   text.c_str(), 
+			   "",				// Title
+			   0);				// Buttons to be displayed					
 }

@@ -10,13 +10,15 @@
 #pragma once
 
 #include "Shader.h"
-#include "ObjModel.h"
+#include "TxtModel.h"
 #include "Camera.h"
 
 struct CameraBuffer // For vertex shader
 {
 	XMFLOAT3 cameraPosition;
-	float padding;
+	int textureTileCountX;
+	int textureTileCountY;
+	XMFLOAT3 padding;
 };
 
 struct LightBuffer // For pixel shader
@@ -31,16 +33,16 @@ struct LightBuffer // For pixel shader
 class LightShader : public Shader
 {
 public:
-	LightShader(ID3D11Device &device, ID3D11DeviceContext &immediateContext);
+	LightShader(ID3D11Device *device, ID3D11DeviceContext *immediateContext);
 	~LightShader();
 
 	HRESULT Initialize();
-	bool Render(ObjModel* pModel, Camera* pCamera);
+	bool Render(TxtModel *pModel, Camera *pCamera);
 
 private:
-	ID3D11VertexShader* m_pInstanceVertexShader;
-	ID3D11InputLayout* m_pInstanceVertexInputLayout;
-	ID3D11Buffer* m_pCameraBuffer;
-	ID3D11Buffer* m_pLightBuffer;
-	ID3D11SamplerState* m_pSamplerState;
+	ID3D11VertexShader *m_pInstanceVertexShader;
+	ID3D11InputLayout *m_pInstanceVertexInputLayout;
+	ID3D11Buffer *m_pCameraBuffer;
+	ID3D11Buffer *m_pLightBuffer;
+	ID3D11SamplerState *m_pSamplerState;
 };

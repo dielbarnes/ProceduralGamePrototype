@@ -7,7 +7,7 @@
 
 #pragma region Init
 
-ShaderManager::ShaderManager(ID3D11Device &device, ID3D11DeviceContext &immediateContext)
+ShaderManager::ShaderManager(ID3D11Device *device, ID3D11DeviceContext *immediateContext)
 {
 	m_pLightShader = new LightShader(device, immediateContext);
 	m_pSkyDomeShader = new SkyDomeShader(device, immediateContext);
@@ -42,7 +42,7 @@ HRESULT ShaderManager::InitializeShaders()
 
 #pragma region Render
 
-bool ShaderManager::RenderModel(ObjModel* pModel, Camera* pCamera)
+bool ShaderManager::RenderModel(TxtModel* pModel, Camera* pCamera)
 {
 	return m_pLightShader->Render(pModel, pCamera);
 }

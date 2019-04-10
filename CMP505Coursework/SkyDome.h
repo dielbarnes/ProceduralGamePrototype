@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ObjModel.h"
+#include "TxtModel.h"
 
 struct SkyDomeVertex
 {
@@ -21,13 +21,10 @@ public:
 	SkyDome();
 	~SkyDome();
 
-	bool InitializeBuffers(ID3D11Device* device);
-	void Render(ID3D11DeviceContext* immediateContext);
-
 	void SetVertexCount(int iCount);
+	void SetVertexData(VertexData *vertexData);
 	void SetIndexCount(int iCount);
 	int GetIndexCount();
-	void SetVertexData(VertexData* vertexData);
 	void SetWorldMatrix(XMMATRIX worldMatrix);
 	XMMATRIX GetWorldMatrix();
 	void SetTopColor(XMFLOAT4 topColor);
@@ -37,12 +34,15 @@ public:
 	void SetBottomColor(XMFLOAT4 bottomColor);
 	XMFLOAT4 GetBottomColor();
 
+	bool InitializeBuffers(ID3D11Device *pDevice);
+	void Render(ID3D11DeviceContext *pImmediateContext);
+
 private:
-	ID3D11Buffer* m_pVertexBuffer;
+	ID3D11Buffer *m_pVertexBuffer;
 	int m_iVertexCount;
-	ID3D11Buffer* m_pIndexBuffer;
+	VertexData *m_vertexData;
+	ID3D11Buffer *m_pIndexBuffer;
 	int m_iIndexCount;
-	VertexData* m_vertexData;
 	XMMATRIX m_worldMatrix;
 	XMFLOAT4 m_topColor;
 	XMFLOAT4 m_centerColor;

@@ -19,7 +19,9 @@ cbuffer MatrixBuffer
 cbuffer CameraBuffer
 {
 	float3 cameraPosition;
-	float padding;
+	int textureTileCountX;
+	int textureTileCountY;
+	float3 padding;
 };
 
 // Input/output
@@ -57,7 +59,7 @@ PS_INPUT VS(VS_INPUT input)
 	output.position = mul(output.position, projectionMatrix);
 
 	// Store the texture coordinates for the pixel shader
-	output.texCoord = input.texCoord;
+	output.texCoord = float2(input.texCoord.x * textureTileCountX, input.texCoord.y * textureTileCountY);
 
 	// Calculate the normal vector against the world matrix only
 	output.normal = mul(input.normal, (float3x3)worldMatrix);

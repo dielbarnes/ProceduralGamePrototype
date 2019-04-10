@@ -10,7 +10,7 @@
 
 #pragma region Init
 
-Camera::Camera(const XMFLOAT3 position, const float fAspectRatio)
+Camera::Camera(XMFLOAT3 position, float fAspectRatio)
 {
 	// Set the initial camera position
 	m_vPosition.m128_f32[0] = position.x;
@@ -54,48 +54,34 @@ XMMATRIX Camera::GetProjectionMatrix()
 
 #pragma region Move/Rotate
 
-void Camera::MoveForward(const float fDeltaTime, const float fValue)
+void Camera::Move(Direction direction, float fOffset)
 {
-	m_vForward.m128_f32[1] = 0;
-	XMVECTOR offset = m_vForward * fDeltaTime * fValue;
-	Move(offset);
-}
+	XMVECTOR vOffset;
 
-void Camera::MoveBackward(const float fDeltaTime, const float fValue)
-{
-	m_vBackward.m128_f32[1] = 0;
-	XMVECTOR offset = m_vBackward * fDeltaTime * fValue;
-	Move(offset);
-}
+	switch (direction)
+	{
+	case Direction::Forward:
+		m_vForward.m128_f32[1] = 0;
+		vOffset = m_vForward * fOffset;
+		break;
+	case Direction::Backward:
+		m_vBackward.m128_f32[1] = 0;
+		vOffset = m_vBackward * fOffset;
+		break;
+	case Direction::Left:
+		m_vLeft.m128_f32[1] = 0;
+		vOffset = m_vLeft * fOffset;
+		break;
+	case Direction::Right:
+		m_vRight.m128_f32[1] = 0;
+		vOffset = m_vRight * fOffset;
+		break;
+	case Direction::Up:
+	case Direction::Down:
+		vOffset = { 0.0f, fOffset, 0.0f };
+		break;
+	}
 
-void Camera::MoveLeft(const float fDeltaTime, const float fValue)
-{
-	m_vLeft.m128_f32[1] = 0;
-	XMVECTOR offset = m_vLeft * fDeltaTime * fValue;
-	Move(offset);
-}
-
-void Camera::MoveRight(const float fDeltaTime, const float fValue)
-{
-	m_vRight.m128_f32[1] = 0;
-	XMVECTOR offset = m_vRight * fDeltaTime * fValue;
-	Move(offset);
-}
-
-void Camera::MoveUp(const float fDeltaTime, const float fValue)
-{
-	XMVECTOR offset = { 0.0f, fDeltaTime * fValue, 0.0f };
-	Move(offset);
-}
-
-void Camera::MoveDown(const float fDeltaTime, const float fValue)
-{
-	XMVECTOR offset = { 0.0f, fDeltaTime * -fValue, 0.0f };
-	Move(offset);
-}
-
-void Camera::Move(const XMVECTOR vOffset)
-{
 	m_vPosition += vOffset;
 	m_vPosition.m128_f32[3] = 0;
 }

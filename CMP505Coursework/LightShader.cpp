@@ -11,7 +11,7 @@
 
 #pragma region Init
 
-LightShader::LightShader(ID3D11Device &device, ID3D11DeviceContext &immediateContext) : Shader(device, immediateContext)
+LightShader::LightShader(ID3D11Device *device, ID3D11DeviceContext *immediateContext) : Shader(device, immediateContext)
 {
 	m_pInstanceVertexShader = nullptr;
 	m_pInstanceVertexInputLayout = nullptr;
@@ -60,7 +60,7 @@ HRESULT LightShader::Initialize()
 	}
 
 	// Compile the instance vertex shader
-	ID3DBlob* pCompiledInstanceVertexShader;
+	ID3DBlob *pCompiledInstanceVertexShader;
 	result = CompileShaderFromFile(L"Shaders/LightInstanceVertexShader.hlsl", "VS", "vs_5_0", &pCompiledInstanceVertexShader);
 	if (FAILED(result))
 	{
@@ -68,7 +68,7 @@ HRESULT LightShader::Initialize()
 		return result;
 	}
 
-	const void* ppCompiledInstanceVertexShader = pCompiledInstanceVertexShader->GetBufferPointer();
+	const void *ppCompiledInstanceVertexShader = pCompiledInstanceVertexShader->GetBufferPointer();
 	SIZE_T compiledInstanceVertexShaderSize = pCompiledInstanceVertexShader->GetBufferSize();
 
 	// Create the instance vertex shader
@@ -100,6 +100,8 @@ HRESULT LightShader::Initialize()
 		Utils::ShowError("Failed to create instance vertex input layout.", result);
 		return result;
 	}
+
+	SAFE_RELEASE(pCompiledInstanceVertexShader)
 
 	// Create the camera constant buffer
 	// ByteWidth always needs to be a multiple of 16 if using D3D11_BIND_CONSTANT_BUFFER or CreateBuffer will fail
@@ -146,9 +148,6 @@ HRESULT LightShader::Initialize()
 		return false;
 	}
 
-	// Release
-	SAFE_RELEASE(pCompiledInstanceVertexShader)
-
 	return result;
 }
 
@@ -156,7 +155,7 @@ HRESULT LightShader::Initialize()
 
 #pragma region Render
 
-bool LightShader::Render(ObjModel* pModel, Camera* pCamera)
+bool LightShader::Render(TxtModel *pModel, Camera *pCamera)
 {
 	HRESULT result = S_OK;
 
@@ -185,11 +184,13 @@ bool LightShader::Render(ObjModel* pModel, Camera* pCamera)
 	}
 
 	// Get a pointer to the camera buffer data
-	CameraBuffer* cameraBufferData = (CameraBuffer*)mappedResource.pData;
+	CameraBuffer *pCameraBufferData = (CameraBuffer*)mappedResource.pData;
 
 	// Copy the camera position into the camera buffer
-	cameraBufferData->cameraPosition = pCamera->GetPosition();
-	cameraBufferData->padding = 0.0f;
+	pCameraBufferData->cameraPosition = pCamera->GetPosition();
+	pCameraBufferData->textureTileCountX = pModel->GetTextureTileCount().x;
+	pCameraBufferData->textureTileCountY = pModel->GetTextureTileCount().y;
+	pCameraBufferData->padding = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	// Unlock the camera buffer
 	m_pImmediateContext->Unmap(m_pCameraBuffer, 0);
@@ -220,20 +221,20 @@ bool LightShader::Render(ObjModel* pModel, Camera* pCamera)
 	}
 
 	// Get a pointer to the light buffer data
-	LightBuffer* lightBufferData = (LightBuffer*)mappedResource.pData;
+	LightBuffer *pLightBufferData = (LightBuffer*)mappedResource.pData;
 
 	// Copy the light data into the light buffer
-	lightBufferData->ambientColor = pModel->GetAmbientColor();
-	lightBufferData->diffuseColor = pModel->GetDiffuseColor();
-	lightBufferData->specularColor = pModel->GetSpecularColor();
-	lightBufferData->specularPower = pModel->GetSpecularPower();
-	lightBufferData->lightDirection = pModel->GetLightDirection();
+	pLightBufferData->ambientColor = pModel->GetAmbientColor();
+	pLightBufferData->diffuseColor = pModel->GetDiffuseColor();
+	pLightBufferData->specularColor = pModel->GetSpecularColor();
+	pLightBufferData->specularPower = pModel->GetSpecularPower();
+	pLightBufferData->lightDirection = pModel->GetLightDirection();
 
 	// Unlock the light buffer
 	m_pImmediateContext->Unmap(m_pLightBuffer, 0);
 
 	// Set the constant buffers to be used by the pixel shader
-	ID3D11Buffer* psConstantBuffers[1] = { m_pLightBuffer };
+	ID3D11Buffer *psConstantBuffers[1] = { m_pLightBuffer };
 	m_pImmediateContext->PSSetConstantBuffers(0, 1, psConstantBuffers);
 
 	// Set the texture to be used by the pixel shader

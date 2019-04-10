@@ -4,7 +4,7 @@
 //
 
 #include <windows.h>
-#include "App.h"
+#include "Engine.h"
 #include "Utils.h"
 
 // Entry point
@@ -13,13 +13,13 @@ int WINAPI WinMain(HINSTANCE hInstance,
 				   PSTR pCmdLine,				// Address of command line string for the application
 				   int iCmdShow)				// Controls how the window is to be shown
 {
-	App* pApp = new App(hInstance);
-	if (pApp->Initialize())
+	Engine *pEngine = new Engine(hInstance);
+	if (pEngine->Initialize("Procedural Game Prototype", 1024, 768))
 	{
-		pApp->Run();
+		pEngine->Run();
 	}
 
-	SAFE_DELETE(pApp);
+	SAFE_DELETE(pEngine);
 
 	return 0;
 }

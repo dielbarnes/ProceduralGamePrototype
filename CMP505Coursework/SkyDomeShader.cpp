@@ -10,7 +10,7 @@
 
 #pragma region Init
 
-SkyDomeShader::SkyDomeShader(ID3D11Device &device, ID3D11DeviceContext &immediateContext) : Shader(device, immediateContext)
+SkyDomeShader::SkyDomeShader(ID3D11Device *device, ID3D11DeviceContext *immediateContext) : Shader(device, immediateContext)
 {
 	m_pColorBuffer = nullptr;
 }
@@ -63,7 +63,7 @@ HRESULT SkyDomeShader::Initialize()
 
 #pragma region Render
 
-bool SkyDomeShader::Render(SkyDome* pSkyDome, Camera* pCamera)
+bool SkyDomeShader::Render(SkyDome *pSkyDome, Camera *pCamera)
 {
 	HRESULT result = S_OK;
 
@@ -90,18 +90,18 @@ bool SkyDomeShader::Render(SkyDome* pSkyDome, Camera* pCamera)
 	}
 
 	// Get a pointer to the color buffer data
-	ColorBuffer* colorBufferData = (ColorBuffer*)mappedResource.pData;
+	ColorBuffer *pColorBufferData = (ColorBuffer*)mappedResource.pData;
 
 	// Copy the colors into the color buffer
-	colorBufferData->topColor = pSkyDome->GetTopColor();
-	colorBufferData->centerColor = pSkyDome->GetCenterColor();
-	colorBufferData->bottomColor = pSkyDome->GetBottomColor();
+	pColorBufferData->topColor = pSkyDome->GetTopColor();
+	pColorBufferData->centerColor = pSkyDome->GetCenterColor();
+	pColorBufferData->bottomColor = pSkyDome->GetBottomColor();
 
 	// Unlock the color buffer
 	m_pImmediateContext->Unmap(m_pColorBuffer, 0);
 
 	// Set the constant buffers to be used by the pixel shader
-	ID3D11Buffer* psConstantBuffers[1] = { m_pColorBuffer };
+	ID3D11Buffer *psConstantBuffers[1] = { m_pColorBuffer };
 	m_pImmediateContext->PSSetConstantBuffers(0, 1, psConstantBuffers);
 
 	// Set the pixel shader to the device

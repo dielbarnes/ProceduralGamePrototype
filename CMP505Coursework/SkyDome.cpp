@@ -25,10 +25,10 @@ SkyDome::~SkyDome()
 	SAFE_RELEASE(m_pIndexBuffer);
 }
 
-bool SkyDome::InitializeBuffers(ID3D11Device* device)
+bool SkyDome::InitializeBuffers(ID3D11Device *pDevice)
 {
-	SkyDomeVertex* vertices = new SkyDomeVertex[m_iVertexCount];
-	unsigned long* indices = new unsigned long[m_iIndexCount];
+	SkyDomeVertex *vertices = new SkyDomeVertex[m_iVertexCount];
+	unsigned long *indices = new unsigned long[m_iIndexCount];
 
 	// Load the model data into the vertex and index arrays
 	for (int i = 0; i < m_iVertexCount; i++)
@@ -49,12 +49,14 @@ bool SkyDome::InitializeBuffers(ID3D11Device* device)
 	D3D11_SUBRESOURCE_DATA subresourceData = {}; // Data that will be copied to the buffer during creation
 	subresourceData.pSysMem = vertices;
 
-	HRESULT result = device->CreateBuffer(&bufferDesc, &subresourceData, &m_pVertexBuffer);
+	HRESULT result = pDevice->CreateBuffer(&bufferDesc, &subresourceData, &m_pVertexBuffer);
 	if (FAILED(result))
 	{
-		Utils::ShowError("Failed to create vertex buffer.", result);
+		Utils::ShowError("Failed to create sky dome vertex buffer.", result);
 		return false;
 	}
+
+	SAFE_DELETE_ARRAY(vertices);
 
 	// Create the index buffer
 
@@ -63,15 +65,13 @@ bool SkyDome::InitializeBuffers(ID3D11Device* device)
 
 	subresourceData.pSysMem = indices;
 
-	result = device->CreateBuffer(&bufferDesc, &subresourceData, &m_pIndexBuffer);
+	result = pDevice->CreateBuffer(&bufferDesc, &subresourceData, &m_pIndexBuffer);
 	if (FAILED(result))
 	{
-		Utils::ShowError("Failed to create index buffer.", result);
+		Utils::ShowError("Failed to create sky dome index buffer.", result);
 		return false;
 	}
 
-	// Release
-	SAFE_DELETE_ARRAY(vertices);
 	SAFE_DELETE_ARRAY(indices);
 
 	return true;
@@ -86,6 +86,11 @@ void SkyDome::SetVertexCount(int iCount)
 	m_iVertexCount = iCount;
 }
 
+void SkyDome::SetVertexData(VertexData *vertexData)
+{
+	m_vertexData = vertexData;
+}
+
 void SkyDome::SetIndexCount(int iCount)
 {
 	m_iIndexCount = iCount;
@@ -94,11 +99,6 @@ void SkyDome::SetIndexCount(int iCount)
 int SkyDome::GetIndexCount()
 {
 	return m_iIndexCount;
-}
-
-void SkyDome::SetVertexData(VertexData* vertexData)
-{
-	m_vertexData = vertexData;
 }
 
 void SkyDome::SetWorldMatrix(XMMATRIX worldMatrix)
@@ -145,25 +145,25 @@ XMFLOAT4 SkyDome::GetBottomColor()
 
 #pragma region Render
 
-void SkyDome::Render(ID3D11DeviceContext* immediateContext)
+void SkyDome::Render(ID3D11DeviceContext *pImmediateContext)
 {
 	// Set the vertex and index buffers to active in the input assembler so they can be rendered (put them on the graphics pipeline)
 
 	UINT uiStrides = sizeof(SkyDomeVertex);
 	UINT uiOffsets = 0;
 
-	immediateContext->IASetVertexBuffers(0,					// First input slot for binding
-										 1,					// Number of vertex buffers in the array
-										 &m_pVertexBuffer,
-										 &uiStrides,		// Size in bytes of the elements to be used from a vertex buffer (one stride for each vertex buffer in the array)
-										 &uiOffsets);		// Number of bytes between the first element of a vertex buffer and the first element that will be used (one offset for each vertex buffer in the array)
+	pImmediateContext->IASetVertexBuffers(0,					// First input slot for binding
+										  1,					// Number of vertex buffers in the array
+										  &m_pVertexBuffer,
+										  &uiStrides,			// Size in bytes of the elements to be used from a vertex buffer (one stride for each vertex buffer in the array)
+										  &uiOffsets);			// Number of bytes between the first element of a vertex buffer and the first element that will be used (one offset for each vertex buffer in the array)
 
-	immediateContext->IASetIndexBuffer(m_pIndexBuffer,
-									   DXGI_FORMAT_R32_UINT,	// 32-bit format that supports 32 bits for the red channel
-									   0);						// Offset in bytes from the start of the index buffer to the first index to use
+	pImmediateContext->IASetIndexBuffer(m_pIndexBuffer,
+									    DXGI_FORMAT_R32_UINT,	// 32-bit format that supports 32 bits for the red channel
+									    0);						// Offset in bytes from the start of the index buffer to the first index to use
 
 	// Set the primitive topology (how the GPU obtains the three vertices it requires to render a triangle)
-	immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 #pragma endregion

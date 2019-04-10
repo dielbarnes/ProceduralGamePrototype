@@ -5,43 +5,43 @@
 
 #pragma once
 
-#include <fstream>
 #include <vector>
-#include "DDSTextureLoader.h"
+#include <fstream>
+#include <DirectXTK/DDSTextureLoader.h>
 #include "SkyDome.h"
 #include "Utils.h"
 
 enum DdsTextureResource : int
 {
-	GroundTexture = 0,
-	KnightTexture
+	GroundTexture = 0
 };
 
-enum ObjModelResource : int
+enum TxtModelResource : int
 {
 	GroundModel = 0,
-	SkyDomeModel		// Not in obj models vector
+	SkyDomeModel		// Not in models vector
 };
 
 class ResourceManager
 {
 public:
-	ResourceManager(ID3D11Device &device, ID3D11DeviceContext &immediateContext);
+	ResourceManager(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext);
 	~ResourceManager();
+	
+	ID3D11ShaderResourceView* GetTexture(DdsTextureResource resource);
+	TxtModel* GetModel(TxtModelResource resource);
+	SkyDome* GetSkyDome();
 
 	bool LoadResources();
-	ID3D11ShaderResourceView* GetDdsTexture(DdsTextureResource resource);
-	ObjModel* GetObjModel(ObjModelResource resource);
-	SkyDome* GetSkyDome();
-	void RenderObjModel(ObjModelResource resource);
+	void RenderModel(TxtModelResource resource);
 
 private:
-	ID3D11Device* m_pDevice;
-	ID3D11DeviceContext* m_pImmediateContext;
+	ID3D11Device *m_pDevice;
+	ID3D11DeviceContext *m_pImmediateContext;
 	std::vector<ID3D11ShaderResourceView*> m_ddsTextures;
-	std::vector<ObjModel*> m_objModels;
+	std::vector<TxtModel*> m_txtModels;
 	SkyDome *m_pSkyDome;
 
 	HRESULT LoadDdsTexture(DdsTextureResource resource);
-	bool LoadObjModel(ObjModelResource resource);
+	bool LoadTxtModel(TxtModelResource resource);
 };
