@@ -8,7 +8,7 @@
 
 // Constant buffer
 
-cbuffer ColorBuffer
+cbuffer SkyColorBuffer
 {
 	float4 topColor;
 	float4 centerColor;

@@ -419,6 +419,11 @@ bool Graphics::Render(const float fDeltaTime)
 		return false;
 	}
 
+	if (!m_pResourceManager->RenderTestModel(m_pShaderManager->GetLightShader(), m_pCamera))
+	{
+		return false;
+	}
+
 	/*// Turn on alpha blending with render target pre-blend operation
 	float blendFactor[4] = COLOR_F4(0.0f, 0.0f, 0.0f, 0.0f) // One blend factor for each RGBA component; modulates values for the pixel shader, render target, or both
 	UINT sampleMask = 0xffffffff; // Determines which samples get updated in all the active render targets

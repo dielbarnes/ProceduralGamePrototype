@@ -11,10 +11,14 @@ ResourceManager::ResourceManager(ID3D11Device *pDevice, ID3D11DeviceContext *pIm
 {
 	m_pDevice = pDevice;
 	m_pImmediateContext = pImmediateContext;
+
+	unsigned char color[] = { 200, 200, 220, 255 };
+	Model::Create1x1ColorTexture(m_pDevice, color, &m_pDefaultTexture);
 }
 
 ResourceManager::~ResourceManager()
 {
+	SAFE_RELEASE(m_pDefaultTexture)
 	for (auto &texture : m_ddsTextures)
 	{
 		SAFE_RELEASE(texture);
@@ -24,10 +28,14 @@ ResourceManager::~ResourceManager()
 		SAFE_DELETE(model);
 	}
 	SAFE_DELETE(m_pSkyDome);
+	SAFE_DELETE(m_pTestModel);
 }
 
 bool ResourceManager::LoadResources()
 {
+	m_pTestModel = new Model(m_pDevice, m_pImmediateContext, m_pDefaultTexture);
+	m_pTestModel->Initialize("Resources/crystal_post.obj");
+
 	// Loading of resources should be in the same order as the enums
 
 	// Ground
@@ -56,9 +64,9 @@ bool ResourceManager::LoadResources()
 		return false;
 	}
 
-	m_pSkyDome->SetTopColor(COLOR_XMF4(255.0f, 204.0f, 248.0f, 1.0f)); // Light pink
-	m_pSkyDome->SetCenterColor(COLOR_XMF4(200.0f, 180.0f, 180.0f, 1.0f)); // Light gray
-	m_pSkyDome->SetBottomColor(COLOR_XMF4(255.0f, 193.0f, 127.0f, 1.0f)); // Light orange
+	m_pSkyDome->SetTopColor(COLOR_XMF4(17.0f, 0.0f, 50.0f, 1.0f));
+	m_pSkyDome->SetCenterColor(COLOR_XMF4(10.0f, 0.0f, 30.0f, 1.0f));
+	m_pSkyDome->SetBottomColor(COLOR_XMF4(7.0f, 0.0f, 20.0f, 1.0f));
 
 	// Initialize the vertex, index, and instance buffers
 
@@ -239,6 +247,11 @@ void ResourceManager::RenderModel(TxtModelResource resource)
 	{
 		m_txtModels[resource]->Render(m_pImmediateContext);
 	}
+}
+
+bool ResourceManager::RenderTestModel(LightShader *pLightShader, Camera *pCamera)
+{
+	return m_pTestModel->Render(pLightShader, pCamera);
 }
 
 #pragma endregion

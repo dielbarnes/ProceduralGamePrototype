@@ -14,6 +14,8 @@ public:
 	ShaderManager(ID3D11Device *device, ID3D11DeviceContext *immediateContext);
 	~ShaderManager();
 
+	LightShader* GetLightShader();
+
 	HRESULT InitializeShaders();
 	bool RenderModel(TxtModel *pModel, Camera *pCamera);
 	bool RenderSkyDome(SkyDome *pSkyDome, Camera *pCamera);

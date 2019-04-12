@@ -12,7 +12,7 @@
 #include "SkyDome.h"
 #include "Camera.h"
 
-struct ColorBuffer // For pixel shader
+struct SkyColorBuffer // For pixel shader
 {
 	XMFLOAT4 topColor;
 	XMFLOAT4 centerColor;

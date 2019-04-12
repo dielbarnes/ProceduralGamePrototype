@@ -20,4 +20,6 @@ class Utils
 {
 public:
 	static void ShowError(LPCTSTR message, HRESULT result);
+	static std::string GetDirectoryFromPath(std::string strFilePath);
+	static std::string GetFileExtension(std::string strFilename);
 };

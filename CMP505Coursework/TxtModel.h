@@ -43,7 +43,7 @@ public:
 	~TxtModel();
 
 	void SetTexture(ID3D11ShaderResourceView *texture);
-	ID3D11ShaderResourceView** GetTexture();
+	ID3D11ShaderResourceView* GetTexture();
 	void SetTextureTileCount(int x, int y);
 	XMINT2 GetTextureTileCount();
 	void SetVertexCount(int iCount);

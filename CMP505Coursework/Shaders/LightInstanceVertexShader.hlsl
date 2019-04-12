@@ -17,7 +17,7 @@ cbuffer MatrixBuffer
 	matrix projectionMatrix;
 };
 
-cbuffer CameraBuffer
+cbuffer LightVSBuffer
 {
 	float3 cameraPosition;
 	int textureTileCountX;

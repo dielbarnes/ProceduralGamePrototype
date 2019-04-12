@@ -9,6 +9,7 @@
 #include <fstream>
 #include <DirectXTK/DDSTextureLoader.h>
 #include "SkyDome.h"
+#include "Model.h"
 #include "Utils.h"
 
 enum DdsTextureResource : int
@@ -34,13 +35,16 @@ public:
 
 	bool LoadResources();
 	void RenderModel(TxtModelResource resource);
+	bool RenderTestModel(LightShader *pLightShader, Camera *pCamera);
 
 private:
 	ID3D11Device *m_pDevice;
 	ID3D11DeviceContext *m_pImmediateContext;
+	ID3D11ShaderResourceView *m_pDefaultTexture;
 	std::vector<ID3D11ShaderResourceView*> m_ddsTextures;
 	std::vector<TxtModel*> m_txtModels;
 	SkyDome *m_pSkyDome;
+	Model *m_pTestModel;
 
 	HRESULT LoadDdsTexture(DdsTextureResource resource);
 	bool LoadTxtModel(TxtModelResource resource);

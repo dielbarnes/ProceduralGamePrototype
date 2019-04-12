@@ -42,17 +42,17 @@ HRESULT SkyDomeShader::Initialize()
 		return result;
 	}
 
-	// Create the color constant buffer
+	// Create the sky color constant buffer
 	// ByteWidth always needs to be a multiple of 16 if using D3D11_BIND_CONSTANT_BUFFER or CreateBuffer will fail
 	D3D11_BUFFER_DESC bufferDesc = {};
-	bufferDesc.ByteWidth = sizeof(ColorBuffer);
+	bufferDesc.ByteWidth = sizeof(SkyColorBuffer);
 	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;				// Resource is accessible by both the GPU (read only) and the CPU (write only); good choice for a resource that will be updated by the CPU at least once per frame
 	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;	// Bind the buffer as a constant buffer to the input assembler stage
 	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	result = m_pDevice->CreateBuffer(&bufferDesc, nullptr, &m_pColorBuffer);
 	if (FAILED(result))
 	{
-		Utils::ShowError("Failed to create color buffer.", result);
+		Utils::ShowError("Failed to create sky color buffer.", result);
 		return result;
 	}
 
@@ -90,7 +90,7 @@ bool SkyDomeShader::Render(SkyDome *pSkyDome, Camera *pCamera)
 	}
 
 	// Get a pointer to the color buffer data
-	ColorBuffer *pColorBufferData = (ColorBuffer*)mappedResource.pData;
+	SkyColorBuffer *pColorBufferData = (SkyColorBuffer*)mappedResource.pData;
 
 	// Copy the colors into the color buffer
 	pColorBufferData->topColor = pSkyDome->GetTopColor();

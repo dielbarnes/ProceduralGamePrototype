@@ -40,6 +40,15 @@ HRESULT ShaderManager::InitializeShaders()
 
 #pragma endregion
 
+#pragma region Setters/Getters
+
+LightShader* ShaderManager::GetLightShader()
+{
+	return m_pLightShader;
+}
+
+#pragma endregion
+
 #pragma region Render
 
 bool ShaderManager::RenderModel(TxtModel* pModel, Camera* pCamera)

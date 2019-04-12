@@ -1,0 +1,7 @@
+﻿  LightShader.cpp
+  Model.cpp
+c:\users\dielb\desktop\cmp505coursework\cmp505coursework\model.cpp(134): warning C4838: conversion from 'ai_real' to 'unsigned char' requires a narrowing conversion
+c:\users\dielb\desktop\cmp505coursework\cmp505coursework\model.cpp(134): warning C4244: 'initializing': conversion from 'ai_real' to 'unsigned char', possible loss of data
+  Generating Code...
+c:\users\dielb\desktop\cmp505coursework\cmp505coursework\model.cpp(251): warning C4715: 'Model::Create1x1ColorTexture': not all control paths return a value
+  CMP505Coursework.vcxproj -> C:\Users\dielb\Desktop\CMP505Coursework\x64\Debug\CMP505Coursework.exe

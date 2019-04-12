@@ -125,9 +125,9 @@ void TxtModel::SetTexture(ID3D11ShaderResourceView *texture)
 	m_pTexture = texture;
 }
 
-ID3D11ShaderResourceView** TxtModel::GetTexture()
+ID3D11ShaderResourceView* TxtModel::GetTexture()
 {
-	return &m_pTexture;
+	return m_pTexture;
 }
 
 void TxtModel::SetTextureTileCount(int x, int y)

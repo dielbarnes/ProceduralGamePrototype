@@ -12,7 +12,7 @@ SamplerState samplerState;
 
 // Constant buffer
 
-cbuffer LightBuffer
+cbuffer LightPSBuffer
 {
 	float4 ambientColor;
 	float4 diffuseColor;

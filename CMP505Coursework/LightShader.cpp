@@ -15,8 +15,8 @@ LightShader::LightShader(ID3D11Device *device, ID3D11DeviceContext *immediateCon
 {
 	m_pInstanceVertexShader = nullptr;
 	m_pInstanceVertexInputLayout = nullptr;
-	m_pCameraBuffer = nullptr;
-	m_pLightBuffer = nullptr;
+	m_pLightVSBuffer = nullptr;
+	m_pLightPSBuffer = nullptr;
 	m_pSamplerState = nullptr;
 }
 
@@ -24,8 +24,8 @@ LightShader::~LightShader()
 {
 	SAFE_RELEASE(m_pInstanceVertexShader)
 	SAFE_RELEASE(m_pInstanceVertexInputLayout)
-	SAFE_RELEASE(m_pCameraBuffer)
-	SAFE_RELEASE(m_pLightBuffer)
+	SAFE_RELEASE(m_pLightVSBuffer)
+	SAFE_RELEASE(m_pLightPSBuffer)
 	SAFE_RELEASE(m_pSamplerState)
 }
 
@@ -103,26 +103,26 @@ HRESULT LightShader::Initialize()
 
 	SAFE_RELEASE(pCompiledInstanceVertexShader)
 
-	// Create the camera constant buffer
+	// Create the light vertex shader constant buffer
 	// ByteWidth always needs to be a multiple of 16 if using D3D11_BIND_CONSTANT_BUFFER or CreateBuffer will fail
 	D3D11_BUFFER_DESC bufferDesc = {};
-	bufferDesc.ByteWidth = sizeof(CameraBuffer);
+	bufferDesc.ByteWidth = sizeof(LightVSBuffer);
 	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;				// Resource is accessible by both the GPU (read only) and the CPU (write only); good choice for a resource that will be updated by the CPU at least once per frame
 	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;	// Bind the buffer as a constant buffer to the input assembler stage
 	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	result = m_pDevice->CreateBuffer(&bufferDesc, nullptr, &m_pCameraBuffer);
+	result = m_pDevice->CreateBuffer(&bufferDesc, nullptr, &m_pLightVSBuffer);
 	if (FAILED(result))
 	{
-		Utils::ShowError("Failed to create camera buffer.", result);
+		Utils::ShowError("Failed to create light vertex shader buffer.", result);
 		return result;
 	}
 
-	// Create the light constant buffer
-	bufferDesc.ByteWidth = sizeof(LightBuffer);
-	result = m_pDevice->CreateBuffer(&bufferDesc, nullptr, &m_pLightBuffer);
+	// Create the light pixel shader constant buffer
+	bufferDesc.ByteWidth = sizeof(LightPSBuffer);
+	result = m_pDevice->CreateBuffer(&bufferDesc, nullptr, &m_pLightPSBuffer);
 	if (FAILED(result))
 	{
-		Utils::ShowError("Failed to create light buffer.", result);
+		Utils::ShowError("Failed to create light pixel shader buffer.", result);
 		return result;
 	}
 
@@ -155,12 +155,14 @@ HRESULT LightShader::Initialize()
 
 #pragma region Render
 
-bool LightShader::Render(TxtModel *pModel, Camera *pCamera)
+bool LightShader::PreRender(int iInstanceCount, XMINT2 textureTileCount, XMFLOAT4 ambientColor,
+							XMFLOAT4 diffuseColor, XMFLOAT4 specularColor, float specularPower,
+							XMFLOAT3 lightDirection, Camera *pCamera)
 {
 	HRESULT result = S_OK;
 
 	// Set the vertex input layout
-	if (pModel->GetInstanceCount() == 1)
+	if (iInstanceCount == 1)
 	{
 		m_pImmediateContext->IASetInputLayout(m_pVertexInputLayout);
 	}
@@ -169,37 +171,34 @@ bool LightShader::Render(TxtModel *pModel, Camera *pCamera)
 		m_pImmediateContext->IASetInputLayout(m_pInstanceVertexInputLayout);
 	}
 
-	// Update and set the matrix constant buffer to be used by the vertex shader
-	Shader::SetMatrixBuffer(pModel->GetWorldMatrix(), pCamera->GetViewMatrix(), pCamera->GetProjectionMatrix());
+	// Update the light vertex shader constant buffer
 
-	// Update the camera constant buffer
-
-	// Lock the camera buffer so it can be written to
+	// Lock the light vertex shader buffer so it can be written to
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	result = m_pImmediateContext->Map(m_pCameraBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	result = m_pImmediateContext->Map(m_pLightVSBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	if (FAILED(result))
 	{
-		Utils::ShowError("Failed to map the camera buffer.", result);
+		Utils::ShowError("Failed to map the  light vertex shader buffer.", result);
 		return false;
 	}
 
-	// Get a pointer to the camera buffer data
-	CameraBuffer *pCameraBufferData = (CameraBuffer*)mappedResource.pData;
+	// Get a pointer to the light vertex shader buffer data
+	LightVSBuffer *pLightVSBufferData = (LightVSBuffer*)mappedResource.pData;
 
-	// Copy the camera position into the camera buffer
-	pCameraBufferData->cameraPosition = pCamera->GetPosition();
-	pCameraBufferData->textureTileCountX = pModel->GetTextureTileCount().x;
-	pCameraBufferData->textureTileCountY = pModel->GetTextureTileCount().y;
-	pCameraBufferData->padding = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	// Copy the camera position and the texture tile count into the light vertex shader buffer
+	pLightVSBufferData->cameraPosition = pCamera->GetPosition();
+	pLightVSBufferData->textureTileCountX = textureTileCount.x;
+	pLightVSBufferData->textureTileCountY = textureTileCount.y;
+	pLightVSBufferData->padding = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	// Unlock the camera buffer
-	m_pImmediateContext->Unmap(m_pCameraBuffer, 0);
+	// Unlock the light vertex shader buffer
+	m_pImmediateContext->Unmap(m_pLightVSBuffer, 0);
 
 	// Set the constant buffers to be used by the vertex shader
-	m_pImmediateContext->VSSetConstantBuffers(1, 1, &m_pCameraBuffer);
+	m_pImmediateContext->VSSetConstantBuffers(1, 1, &m_pLightVSBuffer);
 
 	// Set the vertex shader to the device
-	if (pModel->GetInstanceCount() == 1)
+	if (iInstanceCount == 1)
 	{
 		m_pImmediateContext->VSSetShader(m_pVertexShader,
 										 nullptr,			// Array of class instance interfaces used by the vertex shader
@@ -210,35 +209,32 @@ bool LightShader::Render(TxtModel *pModel, Camera *pCamera)
 		m_pImmediateContext->VSSetShader(m_pInstanceVertexShader, nullptr, 0);
 	}
 
-	// Update the light constant buffer
+	// Update the light pixel shader constant buffer
 
-	// Lock the light buffer so it can be written to
-	result = m_pImmediateContext->Map(m_pLightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	// Lock the light pixel shader buffer so it can be written to
+	result = m_pImmediateContext->Map(m_pLightPSBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	if (FAILED(result))
 	{
-		Utils::ShowError("Failed to map the light buffer.", result);
+		Utils::ShowError("Failed to map the light pixel shader buffer.", result);
 		return false;
 	}
 
-	// Get a pointer to the light buffer data
-	LightBuffer *pLightBufferData = (LightBuffer*)mappedResource.pData;
+	// Get a pointer to the light pixel shader buffer data
+	LightPSBuffer *pLightPSBufferData = (LightPSBuffer*)mappedResource.pData;
 
-	// Copy the light data into the light buffer
-	pLightBufferData->ambientColor = pModel->GetAmbientColor();
-	pLightBufferData->diffuseColor = pModel->GetDiffuseColor();
-	pLightBufferData->specularColor = pModel->GetSpecularColor();
-	pLightBufferData->specularPower = pModel->GetSpecularPower();
-	pLightBufferData->lightDirection = pModel->GetLightDirection();
+	// Copy the light data into the light pixel shader buffer
+	pLightPSBufferData->ambientColor = ambientColor;
+	pLightPSBufferData->diffuseColor = diffuseColor;
+	pLightPSBufferData->specularColor = specularColor;
+	pLightPSBufferData->specularPower = specularPower;
+	pLightPSBufferData->lightDirection = lightDirection;
 
-	// Unlock the light buffer
-	m_pImmediateContext->Unmap(m_pLightBuffer, 0);
+	// Unlock the light pixel shader buffer
+	m_pImmediateContext->Unmap(m_pLightPSBuffer, 0);
 
 	// Set the constant buffers to be used by the pixel shader
-	ID3D11Buffer *psConstantBuffers[1] = { m_pLightBuffer };
+	ID3D11Buffer *psConstantBuffers[1] = { m_pLightPSBuffer };
 	m_pImmediateContext->PSSetConstantBuffers(0, 1, psConstantBuffers);
-
-	// Set the texture to be used by the pixel shader
-	m_pImmediateContext->PSSetShaderResources(0, 1, pModel->GetTexture());
 
 	// Set the sampler state in the pixel shader
 	m_pImmediateContext->PSSetSamplers(0, 1, &m_pSamplerState);
@@ -248,19 +244,51 @@ bool LightShader::Render(TxtModel *pModel, Camera *pCamera)
 									 nullptr,			// Array of class instance interfaces used by the pixel shader 
 									 0);				// Number of class instance interfaces
 
-	// Render triangles
-	if (pModel->GetInstanceCount() == 1)
+	return true;
+}
+
+bool LightShader::Render(TxtModel *pModel, Camera *pCamera)
+{
+	std::vector<ID3D11ShaderResourceView*> textures;
+	textures.push_back(pModel->GetTexture());
+
+	if (!PreRender(pModel->GetInstanceCount(), pModel->GetTextureTileCount(), pModel->GetAmbientColor(),
+				   pModel->GetDiffuseColor(), pModel->GetSpecularColor(), pModel->GetSpecularPower(),
+				   pModel->GetLightDirection(), pCamera))
 	{
-		m_pImmediateContext->DrawIndexed(pModel->GetIndexCount(),
-										 0,							// Location of the first index read by the GPU from the index buffer
-										 0);						// Value added to each index before reading a vertex from the vertex buffer
+		return false;
+	}
+
+	Render(pModel->GetInstanceCount(), pModel->GetWorldMatrix(), textures, pModel->GetIndexCount(), pCamera);
+
+	return true;
+}
+
+void LightShader::Render(Mesh *pMesh, Camera *pCamera)
+{
+	Render(1, pMesh->GetTransformMatrix(), pMesh->GetTextures(), pMesh->GetIndexCount(), pCamera);
+}
+
+void LightShader::Render(int iInstanceCount, XMMATRIX worldMatrix, std::vector<ID3D11ShaderResourceView*> textures, 
+						 int iIndexCount, Camera *pCamera)
+{
+	// Update and set the matrix constant buffer to be used by the vertex shader
+	Shader::SetMatrixBuffer(worldMatrix, pCamera->GetViewMatrix(), pCamera->GetProjectionMatrix());
+
+	// Set the texture to be used by the pixel shader
+	m_pImmediateContext->PSSetShaderResources(0, 1, &textures[0]);
+
+	// Render triangles
+	if (iInstanceCount == 1)
+	{
+		m_pImmediateContext->DrawIndexed(iIndexCount,
+										 0,				// Location of the first index read by the GPU from the index buffer
+										 0);			// Value added to each index before reading a vertex from the vertex buffer
 	}
 	else
 	{
-		m_pImmediateContext->DrawInstanced(pModel->GetIndexCount(), pModel->GetInstanceCount(), 0, 0);
+		m_pImmediateContext->DrawInstanced(iIndexCount, iInstanceCount, 0, 0);
 	}
-
-	return true;
 }
 
 #pragma endregion
