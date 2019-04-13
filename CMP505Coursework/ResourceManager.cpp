@@ -28,14 +28,14 @@ ResourceManager::~ResourceManager()
 		SAFE_DELETE(model);
 	}
 	SAFE_DELETE(m_pSkyDome);
-	SAFE_DELETE(m_pTestModel);
+	for (auto &model : m_models)
+	{
+		SAFE_DELETE(model);
+	}
 }
 
 bool ResourceManager::LoadResources()
 {
-	m_pTestModel = new Model(m_pDevice, m_pImmediateContext, m_pDefaultTexture);
-	m_pTestModel->Initialize("Resources/crystal_post.obj");
-
 	// Loading of resources should be in the same order as the enums
 
 	// Ground
@@ -56,6 +56,16 @@ bool ResourceManager::LoadResources()
 	m_txtModels[TxtModelResource::GroundModel]->SetTexture(m_ddsTextures[DdsTextureResource::GroundTexture]);
 	m_txtModels[TxtModelResource::GroundModel]->SetTextureTileCount(4, 4);
 
+	if (!m_txtModels[TxtModelResource::GroundModel]->InitializeBuffers(m_pDevice, 1))
+	{
+		MessageBox(0, "Failed to initialize ground vertex and index buffers.", "", 0);
+		return false;
+	}
+
+	XMMATRIX groundTranslationMatrix = XMMatrixTranslation(0.0f, 0.0f, 0.0f);
+	XMMATRIX groundScalingMatrix = XMMatrixScaling(0.28f, 0.28f, 0.28f);
+	m_txtModels[TxtModelResource::GroundModel]->TransformWorldMatrix(groundTranslationMatrix, XMMatrixIdentity(), groundScalingMatrix);
+
 	// Sky Dome
 
 	if (!LoadTxtModel(TxtModelResource::SkyDomeModel))
@@ -68,25 +78,19 @@ bool ResourceManager::LoadResources()
 	m_pSkyDome->SetCenterColor(COLOR_XMF4(10.0f, 0.0f, 30.0f, 1.0f));
 	m_pSkyDome->SetBottomColor(COLOR_XMF4(7.0f, 0.0f, 20.0f, 1.0f));
 
-	// Initialize the vertex, index, and instance buffers
-
-	if (!m_txtModels[TxtModelResource::GroundModel]->InitializeBuffers(m_pDevice, 1))
-	{
-		MessageBox(0, "Failed to initialize ground vertex and index buffers.", "", 0);
-		return false;
-	}
-
 	if (!m_pSkyDome->InitializeBuffers(m_pDevice))
 	{
 		MessageBox(0, "Failed to initialize sky dome vertex and index buffers.", "", 0);
 		return false;
 	}
 
-	// Transform models
+	// Crystal Post
 
-	XMMATRIX groundTranslationMatrix = XMMatrixTranslation(0.0f, 0.0f, 0.0f);
-	XMMATRIX groundScalingMatrix = XMMatrixScaling(0.28f, 0.28f, 0.28f);
-	m_txtModels[TxtModelResource::GroundModel]->TransformWorldMatrix(groundTranslationMatrix, XMMatrixIdentity(), groundScalingMatrix);
+	if (!LoadModel(ModelResource::CrystalPostModel))
+	{
+		MessageBox(0, "Failed to load crystal post model.", "", 0);
+		return false;
+	}
 
 	return true;
 }
@@ -97,16 +101,16 @@ HRESULT ResourceManager::LoadDdsTexture(DdsTextureResource resource)
 
 	// Create texture
 
-	const wchar_t *filename = L"";
+	const wchar_t *filePath = L"";
 	switch (resource)
 	{
 	case GroundTexture:
-		filename = L"Resources/cobblestone.dds";
+		filePath = L"Resources/cobblestone.dds";
 		break;
 	}
 
 	ID3D11ShaderResourceView *pTexture;
-	result = CreateDDSTextureFromFile(m_pDevice, m_pImmediateContext, filename, nullptr, &pTexture, 0, nullptr);
+	result = CreateDDSTextureFromFile(m_pDevice, m_pImmediateContext, filePath, nullptr, &pTexture, 0, nullptr);
 	if (FAILED(result))
 	{
 		return result;
@@ -136,19 +140,19 @@ bool ResourceManager::LoadTxtModel(TxtModelResource resource)
 
 	// Open file
 
-	const char *filename = "";
+	const char *filePath = "";
 	switch (resource)
 	{
 	case GroundModel:
-		filename = "Resources/plane.txt";
+		filePath = "Resources/plane.txt";
 		break;
 	case SkyDomeModel:
-		filename = "Resources/skydome.txt";
+		filePath = "Resources/skydome.txt";
 		break;
 	}
 
 	std::ifstream file;
-	file.open(filename);
+	file.open(filePath);
 	if (file.fail())
 	{
 		return false;
@@ -214,6 +218,30 @@ bool ResourceManager::LoadTxtModel(TxtModelResource resource)
 	return true;
 }
 
+bool ResourceManager::LoadModel(ModelResource resource)
+{
+	std::string strFilePath = "";
+	switch (resource)
+	{
+	case CrystalPostModel:
+		strFilePath = "Resources/crystal_post.obj";
+		break;
+	case CrystalFenceModel:
+		strFilePath = "Resources/crystal_fence.obj";
+		break;
+	}
+
+	Model *pModel = new Model(m_pDevice, m_pImmediateContext, m_pDefaultTexture);
+	if (!pModel->Initialize(strFilePath))
+	{
+		return false;
+	}
+
+	m_models.push_back(pModel);
+
+	return true;
+}
+
 #pragma endregion
 
 #pragma region Getters
@@ -249,9 +277,22 @@ void ResourceManager::RenderModel(TxtModelResource resource)
 	}
 }
 
-bool ResourceManager::RenderTestModel(LightShader *pLightShader, Camera *pCamera)
+bool ResourceManager::RenderModel(ModelResource resource, Camera *pCamera, LightShader *pLightShader)
 {
-	return m_pTestModel->Render(pLightShader, pCamera);
+	if (!pLightShader->PreRender(m_models[resource], pCamera))
+	{
+		return false;
+	}
+
+	std::vector<Mesh*> meshes = m_models[resource]->GetMeshes();
+
+	for (int i = 0; i < meshes.size(); i++)
+	{
+		meshes[i]->Render(m_pImmediateContext);
+		pLightShader->Render(meshes[i], pCamera);
+	}
+
+	return true;
 }
 
 #pragma endregion

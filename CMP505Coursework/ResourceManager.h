@@ -10,6 +10,7 @@
 #include <DirectXTK/DDSTextureLoader.h>
 #include "SkyDome.h"
 #include "Model.h"
+#include "LightShader.h"
 #include "Utils.h"
 
 enum DdsTextureResource : int
@@ -21,6 +22,12 @@ enum TxtModelResource : int
 {
 	GroundModel = 0,
 	SkyDomeModel		// Not in models vector
+};
+
+enum ModelResource : int
+{
+	CrystalPostModel = 0,
+	CrystalFenceModel
 };
 
 class ResourceManager
@@ -35,7 +42,7 @@ public:
 
 	bool LoadResources();
 	void RenderModel(TxtModelResource resource);
-	bool RenderTestModel(LightShader *pLightShader, Camera *pCamera);
+	bool RenderModel(ModelResource resource, Camera *pCamera, LightShader *pLightShader);
 
 private:
 	ID3D11Device *m_pDevice;
@@ -44,8 +51,9 @@ private:
 	std::vector<ID3D11ShaderResourceView*> m_ddsTextures;
 	std::vector<TxtModel*> m_txtModels;
 	SkyDome *m_pSkyDome;
-	Model *m_pTestModel;
+	std::vector<Model*> m_models;
 
 	HRESULT LoadDdsTexture(DdsTextureResource resource);
 	bool LoadTxtModel(TxtModelResource resource);
+	bool LoadModel(ModelResource resource);
 };

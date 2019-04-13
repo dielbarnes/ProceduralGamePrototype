@@ -264,6 +264,12 @@ bool LightShader::Render(TxtModel *pModel, Camera *pCamera)
 	return true;
 }
 
+bool LightShader::PreRender(Model *pModel, Camera *pCamera)
+{
+	return PreRender(1, XMINT2(1, 1), pModel->GetAmbientColor(), pModel->GetDiffuseColor(), pModel->GetSpecularColor(), 
+					 pModel->GetSpecularPower(), pModel->GetLightDirection(), pCamera);
+}
+
 void LightShader::Render(Mesh *pMesh, Camera *pCamera)
 {
 	Render(1, pMesh->GetTransformMatrix(), pMesh->GetTextures(), pMesh->GetIndexCount(), pCamera);

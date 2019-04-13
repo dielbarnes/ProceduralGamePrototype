@@ -11,7 +11,7 @@
 
 #include "Shader.h"
 #include "TxtModel.h"
-#include "Mesh.h"
+#include "Model.h"
 #include "Camera.h"
 
 struct LightVSBuffer // For vertex shader
@@ -38,10 +38,8 @@ public:
 	~LightShader();
 
 	HRESULT Initialize();
-	bool PreRender(int iInstanceCount, XMINT2 textureTileCount, XMFLOAT4 ambientColor,
-				   XMFLOAT4 diffuseColor, XMFLOAT4 specularColor, float specularPower,
-				   XMFLOAT3 lightDirection, Camera *pCamera);
 	bool Render(TxtModel *pModel, Camera *pCamera);
+	bool PreRender(Model *pModel, Camera *pCamera);
 	void Render(Mesh *pMesh, Camera *pCamera);
 
 private:
@@ -50,7 +48,10 @@ private:
 	ID3D11Buffer *m_pLightVSBuffer;
 	ID3D11Buffer *m_pLightPSBuffer;
 	ID3D11SamplerState *m_pSamplerState;
-	
+
+	bool PreRender(int iInstanceCount, XMINT2 textureTileCount, XMFLOAT4 ambientColor,
+				   XMFLOAT4 diffuseColor, XMFLOAT4 specularColor, float specularPower,
+				   XMFLOAT3 lightDirection, Camera *pCamera);
 	void Render(int iInstanceCount, XMMATRIX worldMatrix, std::vector<ID3D11ShaderResourceView*> textures, 
 				int iIndexCount, Camera *pCamera);
 };

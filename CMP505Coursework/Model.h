@@ -15,7 +15,6 @@
 #include <Assimp/postprocess.h>
 #include <Assimp/scene.h>
 #include "Mesh.h"
-#include "LightShader.h"
 #include "Utils.h"
 
 using namespace DirectX;
@@ -26,6 +25,7 @@ public:
 	Model(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext, ID3D11ShaderResourceView *pDefaultTexture);
 	~Model();
 
+	std::vector<Mesh*> GetMeshes();
 	XMFLOAT4 GetAmbientColor();
 	XMFLOAT4 GetDiffuseColor();
 	XMFLOAT4 GetSpecularColor();
@@ -33,7 +33,6 @@ public:
 	XMFLOAT3 GetLightDirection();
 
 	bool Initialize(std::string strFilePath);
-	bool Render(LightShader *pLightShader, Camera *pCamera);
 	static HRESULT Create1x1ColorTexture(ID3D11Device *pDevice, unsigned char color[4], ID3D11ShaderResourceView **pTexture);
 
 private:

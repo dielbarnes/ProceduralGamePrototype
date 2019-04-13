@@ -16,7 +16,7 @@ Model::Model(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext, ID3D
 	m_pImmediateContext = pImmediateContext;
 	m_pDefaultTexture = pDefaultTexture;
 	m_ambientColor = COLOR_XMF4(51.0f, 51.0f, 51.0f, 1.0f); // Ambient should not be too bright otherwise the scene will appear overexposed and washed-out
-	m_diffuseColor = COLOR_XMF4(255.0f, 255.0f, 255.0f, 1.0f);
+	m_diffuseColor = COLOR_XMF4(150.0f, 200.0f, 255.0f, 1.0f);
 
 	// To disable specular light, set the specular color to black (don't use 0.0 specular power)
 	// Models with 1.0 specular power will appear overly bright and washed-out
@@ -254,6 +254,11 @@ HRESULT Model::Create1x1ColorTexture(ID3D11Device *pDevice, unsigned char color[
 
 #pragma region Setters/Getters
 
+std::vector<Mesh*> Model::GetMeshes()
+{
+	return m_meshes;
+}
+
 XMFLOAT4 Model::GetAmbientColor()
 {
 	return m_ambientColor;
@@ -277,27 +282,6 @@ float Model::GetSpecularPower()
 XMFLOAT3 Model::GetLightDirection()
 {
 	return m_lightDirection;
-}
-
-#pragma endregion
-
-#pragma region Render
-
-bool Model::Render(LightShader *pLightShader, Camera *pCamera)
-{
-	if (!pLightShader->PreRender(1, XMINT2(1, 1), m_ambientColor, m_diffuseColor, m_specularColor, 
-								 m_fSpecularPower, m_lightDirection, pCamera))
-	{
-		return false;
-	}
-
-	for (int i = 0; i < m_meshes.size(); i++)
-	{
-		m_meshes[i]->Render(m_pImmediateContext);
-		pLightShader->Render(m_meshes[i], pCamera);
-	}
-
-	return true;
 }
 
 #pragma endregion

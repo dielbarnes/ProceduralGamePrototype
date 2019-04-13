@@ -58,7 +58,7 @@ bool Graphics::Initialize(int iWindowWidth, int iWindowHeight, HWND hWindow)
 	}
 
 	// Initialize camera
-	XMFLOAT3 position = XMFLOAT3(0.0f, 7.0f, -13.0f);
+	XMFLOAT3 position = XMFLOAT3(0.0f, 5.0f, -10.0f);
 	float fAspectRatio = iWindowWidth / (float)iWindowHeight;
 	m_pCamera = new Camera(position, fAspectRatio);
 
@@ -419,7 +419,7 @@ bool Graphics::Render(const float fDeltaTime)
 		return false;
 	}
 
-	if (!m_pResourceManager->RenderTestModel(m_pShaderManager->GetLightShader(), m_pCamera))
+	if (!m_pResourceManager->RenderModel(ModelResource::CrystalPostModel, m_pCamera, m_pShaderManager->GetLightShader()))
 	{
 		return false;
 	}
