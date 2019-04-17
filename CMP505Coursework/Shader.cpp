@@ -7,10 +7,10 @@
 
 #pragma region Init
 
-Shader::Shader(ID3D11Device *device, ID3D11DeviceContext *immediateContext)
+Shader::Shader(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext)
 {
-	m_pDevice = device;
-	m_pImmediateContext = immediateContext;
+	m_pDevice = pDevice;
+	m_pImmediateContext = pImmediateContext;
 	m_pVertexShader = nullptr;
 	m_pPixelShader = nullptr;
 	m_pVertexInputLayout = nullptr;

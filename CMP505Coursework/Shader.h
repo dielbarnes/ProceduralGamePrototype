@@ -25,10 +25,11 @@ struct MatrixBuffer // For vertex shader
 class Shader
 {
 public:
-	Shader(ID3D11Device *device, ID3D11DeviceContext *immediateContext);
+	Shader(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext);
 	virtual ~Shader();
 
 	HRESULT Initialize(LPCWSTR vertexShaderFilename, LPCSTR vertexShaderEntryPoint, LPCWSTR pixelShaderFilename, LPCSTR pixelShaderEntryPoint, D3D11_INPUT_ELEMENT_DESC vertexInputDesc[], UINT uiElementCount);
+	static HRESULT CompileShaderFromFile(LPCWSTR filename, LPCSTR entryPoint, LPCSTR target, ID3DBlob **ppCompiledCode);
 
 protected:
 	ID3D11Device *m_pDevice;
@@ -38,6 +39,5 @@ protected:
 	ID3D11InputLayout *m_pVertexInputLayout;
 	ID3D11Buffer *m_pMatrixBuffer;
 
-	HRESULT CompileShaderFromFile(LPCWSTR filename, LPCSTR entryPoint, LPCSTR target, ID3DBlob **ppCompiledCode);
 	HRESULT SetMatrixBuffer(XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix);
 };

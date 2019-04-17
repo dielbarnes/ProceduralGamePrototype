@@ -31,7 +31,13 @@ HRESULT SkyDomeShader::Initialize()
 
 	D3D11_INPUT_ELEMENT_DESC vertexInputDesc[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "POSITION",					// Semantic name
+		  0,							// Semantic index (only needed when there is more than one element with the same semantic)
+		  DXGI_FORMAT_R32G32B32_FLOAT,	// 96-bit format that supports 32 bits per color channel
+		  0,							// Input slot (index of vertex buffer the GPU should fetch ranging form 0 to 15)
+		  0,							// Offset in bytes between each element (tells the GPU the memory location to start fetching the data for this element); D3D11_APPEND_ALIGNED_ELEMENT defines the current element directly after the previous one
+		  D3D11_INPUT_PER_VERTEX_DATA,  // Input classification
+		  0 }							// Number of instances to draw using the same per-instance data before advancing in the buffer by one element (must be 0 for an element that contains per-vertex data)
 	};
 
 	UINT uiElementCount = ARRAYSIZE(vertexInputDesc);
@@ -65,8 +71,6 @@ HRESULT SkyDomeShader::Initialize()
 
 bool SkyDomeShader::Render(SkyDome *pSkyDome, Camera *pCamera)
 {
-	HRESULT result = S_OK;
-
 	// Set the vertex input layout
 	m_pImmediateContext->IASetInputLayout(m_pVertexInputLayout);
 
@@ -82,7 +86,7 @@ bool SkyDomeShader::Render(SkyDome *pSkyDome, Camera *pCamera)
 
 	// Lock the color buffer so it can be written to
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	result = m_pImmediateContext->Map(m_pColorBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	HRESULT result = m_pImmediateContext->Map(m_pColorBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	if (FAILED(result))
 	{
 		Utils::ShowError("Failed to map the color buffer.", result);

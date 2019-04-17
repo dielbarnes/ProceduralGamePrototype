@@ -22,6 +22,15 @@ struct Vertex
 	XMFLOAT3 position;
 	XMFLOAT2 textureCoordinates;
 	XMFLOAT3 normal;
+
+	Vertex() {}
+
+	Vertex(XMFLOAT3 pos, XMFLOAT2 texCoord)
+	{
+		position = pos;
+		textureCoordinates = texCoord;
+		normal = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	}
 };
 
 struct VertexData

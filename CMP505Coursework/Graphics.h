@@ -11,6 +11,7 @@
 #include "Camera.h"
 #include "ResourceManager.h"
 #include "ShaderManager.h"
+#include "Bloom.h"
 #include "Utils.h"
 
 // Link necessary libraries
@@ -36,10 +37,9 @@ private:
 	ID3D11DeviceContext *m_pImmediateContext;
 	IDXGISwapChain *m_pSwapChain;
 	ID3D11RenderTargetView *m_pRenderTargetView;
-	ID3D11Texture2D *m_pDepthStencilBuffer;
+	ID3D11DepthStencilView *m_pDepthStencilView;
 	ID3D11DepthStencilState *m_pDepthStencilStateDefault;
 	ID3D11DepthStencilState *m_pDepthStencilStateLessEqual;
-	ID3D11DepthStencilView *m_pDepthStencilView;
 	ID3D11RasterizerState *m_pRasterizerStateDefault;
 	ID3D11RasterizerState *m_pRasterizerStateNoCulling;
 	ID3D11BlendState *m_pBlendStateInvSrcAlpha;
@@ -49,7 +49,13 @@ private:
 	POINT m_mousePosition;
 	ResourceManager *m_pResourceManager;
 	ShaderManager *m_pShaderManager;
+	OffScreenRenderer *m_pOffScreenRenderer;
+	Bloom *m_pBloom;
+
+	PostProcessQuad *m_pPostProcessQuad;
 
 	HRESULT InitDirect3D(int iWindowWidth, int iWindowHeight, HWND hWindow);
 	void HandleKeyboardInput(float fDeltaTime);
+	void SetRenderTarget();
+	void UnbindPixelShaderResources();
 };

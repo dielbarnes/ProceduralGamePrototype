@@ -13,10 +13,9 @@ Graphics::Graphics()
 	m_pImmediateContext = nullptr;
 	m_pSwapChain = nullptr;
 	m_pRenderTargetView = nullptr;
-	m_pDepthStencilBuffer = nullptr;
+	m_pDepthStencilView = nullptr;
 	m_pDepthStencilStateDefault = nullptr;
 	m_pDepthStencilStateLessEqual = nullptr;
-	m_pDepthStencilView = nullptr;
 	m_pRasterizerStateDefault = nullptr;
 	m_pRasterizerStateNoCulling = nullptr;
 	m_pBlendStateInvSrcAlpha = nullptr;
@@ -25,6 +24,8 @@ Graphics::Graphics()
 	m_pCamera = nullptr;
 	m_pResourceManager = nullptr;
 	m_pShaderManager = nullptr;
+	m_pOffScreenRenderer = nullptr;
+	m_pBloom = nullptr;
 }
 
 Graphics::~Graphics()
@@ -33,10 +34,9 @@ Graphics::~Graphics()
 	SAFE_RELEASE(m_pImmediateContext)
 	SAFE_RELEASE(m_pSwapChain)
 	SAFE_RELEASE(m_pRenderTargetView)
-	SAFE_RELEASE(m_pDepthStencilBuffer)
+	SAFE_RELEASE(m_pDepthStencilView)
 	SAFE_RELEASE(m_pDepthStencilStateDefault)
 	SAFE_RELEASE(m_pDepthStencilStateLessEqual)
-	SAFE_RELEASE(m_pDepthStencilView)
 	SAFE_RELEASE(m_pRasterizerStateDefault)
 	SAFE_RELEASE(m_pRasterizerStateNoCulling)
 	SAFE_RELEASE(m_pBlendStateInvSrcAlpha)
@@ -45,6 +45,8 @@ Graphics::~Graphics()
 	SAFE_DELETE(m_pCamera)
 	SAFE_DELETE(m_pResourceManager)
 	SAFE_DELETE(m_pShaderManager)
+	SAFE_DELETE(m_pOffScreenRenderer)
+	SAFE_DELETE(m_pBloom)
 }
 
 bool Graphics::Initialize(int iWindowWidth, int iWindowHeight, HWND hWindow)
@@ -56,6 +58,16 @@ bool Graphics::Initialize(int iWindowWidth, int iWindowHeight, HWND hWindow)
 	{
 		return false;
 	}
+
+
+
+
+	m_pPostProcessQuad = new PostProcessQuad();
+	m_pPostProcessQuad->InitializeBuffers(m_pDevice);
+
+
+
+
 
 	// Initialize camera
 	XMFLOAT3 position = XMFLOAT3(0.0f, 5.0f, -10.0f);
@@ -75,6 +87,20 @@ bool Graphics::Initialize(int iWindowWidth, int iWindowHeight, HWND hWindow)
 	// Create the texture sampler state
 	m_pShaderManager = new ShaderManager(m_pDevice, m_pImmediateContext);
 	if (FAILED(m_pShaderManager->InitializeShaders()))
+	{
+		return false;
+	}
+
+	// Initialize off-screen renderer
+	m_pOffScreenRenderer = new OffScreenRenderer(m_pDevice, m_pImmediateContext);
+	if (FAILED(m_pOffScreenRenderer->Initialize(iWindowWidth, iWindowHeight)))
+	{
+		return false;
+	}
+
+	// Initialize bloom
+	m_pBloom = new Bloom(m_pDevice, m_pImmediateContext, m_pOffScreenRenderer->GetOutputTexture());
+	if (FAILED(m_pBloom->Initialize(iWindowWidth, iWindowHeight)))
 	{
 		return false;
 	}
@@ -145,6 +171,7 @@ HRESULT Graphics::InitDirect3D(int iWindowWidth, int iWindowHeight, HWND hWindow
 	SAFE_RELEASE(pBackBuffer)
 
 	// Create the depth stencil buffer
+
 	D3D11_TEXTURE2D_DESC depthStencilBufferDesc = {};
 	depthStencilBufferDesc.Width = iWindowWidth;
 	depthStencilBufferDesc.Height = iWindowHeight;
@@ -157,9 +184,11 @@ HRESULT Graphics::InitDirect3D(int iWindowWidth, int iWindowHeight, HWND hWindow
 	depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;	// Bind the texture as a depth-stencil target for the output-merger stage
 	depthStencilBufferDesc.CPUAccessFlags = 0;						// CPU access is not required
 	depthStencilBufferDesc.MiscFlags = 0;							// Other resource options
+	
+	ID3D11Texture2D *pDepthStencilBuffer = nullptr;
 	result = m_pDevice->CreateTexture2D(&depthStencilBufferDesc,
 										nullptr,					// Subresources for the texture
-										&m_pDepthStencilBuffer);
+										&pDepthStencilBuffer);
 	if (FAILED(result))
 	{
 		Utils::ShowError("Failed to create depth stencil buffer.", result);
@@ -171,17 +200,14 @@ HRESULT Graphics::InitDirect3D(int iWindowWidth, int iWindowHeight, HWND hWindow
 	depthStencilViewDesc.Format = depthStencilBufferDesc.Format;
 	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;	// The resource should be interpreted as a 2D texture
 	depthStencilViewDesc.Texture2D.MipSlice = 0;						// Use only the first mipmap level of the render target
-	result = m_pDevice->CreateDepthStencilView(m_pDepthStencilBuffer, &depthStencilViewDesc, &m_pDepthStencilView);
+	result = m_pDevice->CreateDepthStencilView(pDepthStencilBuffer, &depthStencilViewDesc, &m_pDepthStencilView);
 	if (FAILED(result))
 	{
 		Utils::ShowError("Failed to create depth stencil view.", result);
 		return result;
 	}
 
-	// Bind the render target view and the depth stencil view to the output merger stage
-	m_pImmediateContext->OMSetRenderTargets(1,						// Number of render targets to bind
-											&m_pRenderTargetView,
-											m_pDepthStencilView);
+	SAFE_RELEASE(pDepthStencilBuffer)
 
 	// Create depth stencil states
 
@@ -398,15 +424,7 @@ bool Graphics::Render(const float fDeltaTime)
 	HandleKeyboardInput(fDeltaTime);
 	m_pCamera->Update();
 
-	// Clear the back buffer
-	float backgroundColor[4] = COLOR_F4(0.0f, 0.0f, 0.0f, 1.0f)
-	m_pImmediateContext->ClearRenderTargetView(m_pRenderTargetView, backgroundColor);
-
-	// Clear the depth buffer to 1.0 (max depth)
-	m_pImmediateContext->ClearDepthStencilView(m_pDepthStencilView,
-											   D3D11_CLEAR_DEPTH,	// Specifies the parts of the depth stencil to clear (clear the depth buffer)
-											   1.0f,				// Clear the depth buffer with this value
-											   0);					// Clear the stencil buffer with this value
+	m_pOffScreenRenderer->SetRenderTarget();
 
 	// Render models
 
@@ -455,11 +473,97 @@ bool Graphics::Render(const float fDeltaTime)
 	// Turn on back face culling
 	m_pImmediateContext->RSSetState(m_pRasterizerStateDefault);
 
+	// For debugging only: save original scene texture as jpg
+	//m_pOffScreenRenderer->SaveTextureToFile();
+
+	m_pPostProcessQuad->Render(m_pImmediateContext);
+
+	m_pBloom->RenderBloomExtractToTexture(m_pOffScreenRenderer->GetOutputTexture());
+
+	UnbindPixelShaderResources();
+	
+	m_pBloom->RenderHorizontalBlurToTexture(m_pBloom->m_pExtractRenderer->GetOutputTexture());
+
+	UnbindPixelShaderResources();
+
+	m_pBloom->RenderVerticalBlurToTexture();
+
+	UnbindPixelShaderResources();
+
+	for (int i = 0; i < 2; i++)
+	{
+		m_pBloom->RenderHorizontalBlurToTexture(m_pBloom->m_pBlur->GetOutputTexture());
+
+		UnbindPixelShaderResources();
+
+		m_pBloom->RenderVerticalBlurToTexture();
+
+		UnbindPixelShaderResources();
+	}
+
+	SetRenderTarget();
+
+	m_pBloom->RenderBloomCombine(m_pPostProcessQuad, m_pOffScreenRenderer->GetOutputTexture(), m_pBloom->m_pBlur->GetOutputTexture());
+
+	//SetRenderTarget();
+	//UnbindPixelShaderResources();
+
+	//m_pShaderManager->GetLightShader()->Render(m_pPostProcessQuad, );
+
+
+	// Extract the bright spots in the scene
+	//m_pBloom->RenderBloomExtractToTexture();
+
+	//SetRenderTarget();
+	//UnbindPixelShaderResources();
+
+	// Blur the bright spots
+
+	/*m_pBloom->RenderHorizontalBlurToTexture();
+
+	SetRenderTarget();
+	UnbindPixelShaderResources();
+
+	m_pBloom->RenderVerticalBlurToTexture();
+
+	SetRenderTarget();
+	UnbindPixelShaderResources();
+
+	// Combine the original scene with the blurred bright spots
+	m_pBloom->RenderBloomCombine();
+
+	UnbindPixelShaderResources();*/
+
 	// Present the back buffer to the front buffer
 	m_pSwapChain->Present(0,	// Sync interval (the presentation occurs immediately, there is no synchronization)
 						  0);	// Swap chain presentation options (present a frame from each buffer starting with the current buffer to the output)
 
 	return true;
+}
+
+void Graphics::SetRenderTarget()
+{
+	// Bind the render target view and the depth stencil view to the output merger stage
+	m_pImmediateContext->OMSetRenderTargets(1,						// Number of render targets to bind
+											&m_pRenderTargetView,
+											m_pDepthStencilView);
+
+	// Clear the back buffer
+	float backgroundColor[4] = COLOR_F4(0.0f, 0.0f, 0.0f, 1.0f)
+	m_pImmediateContext->ClearRenderTargetView(m_pRenderTargetView, backgroundColor);
+
+	// Clear the depth buffer to 1.0 (max depth)
+	m_pImmediateContext->ClearDepthStencilView(m_pDepthStencilView,
+											   D3D11_CLEAR_DEPTH,	// Specifies the parts of the depth stencil to clear (clear the depth buffer)
+											   1.0f,				// Clear the depth buffer with this value
+											   0);					// Clear the stencil buffer with this value
+}
+
+void Graphics::UnbindPixelShaderResources()
+{
+	static ID3D11ShaderResourceView *pEmptyResource = nullptr;
+	m_pImmediateContext->PSSetShaderResources(0, 1, &pEmptyResource);
+	m_pImmediateContext->PSSetShaderResources(1, 1, &pEmptyResource);
 }
 
 #pragma endregion

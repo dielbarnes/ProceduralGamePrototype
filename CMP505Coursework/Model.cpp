@@ -16,7 +16,10 @@ Model::Model(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext, ID3D
 	m_pImmediateContext = pImmediateContext;
 	m_pDefaultTexture = pDefaultTexture;
 	m_ambientColor = COLOR_XMF4(51.0f, 51.0f, 51.0f, 1.0f); // Ambient should not be too bright otherwise the scene will appear overexposed and washed-out
-	m_diffuseColor = COLOR_XMF4(150.0f, 200.0f, 255.0f, 1.0f);
+	m_diffuseColor = COLOR_XMF4(180.0f, 100.0f, 255.0f, 1.0f);
+	
+	//m_ambientColor = COLOR_XMF4(150.0f, 150.0f, 150.0f, 1.0f);
+	//m_diffuseColor = COLOR_XMF4(255.0f, 255.0f, 255.0f, 1.0f);
 
 	// To disable specular light, set the specular color to black (don't use 0.0 specular power)
 	// Models with 1.0 specular power will appear overly bright and washed-out
