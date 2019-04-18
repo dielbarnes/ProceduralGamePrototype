@@ -157,7 +157,8 @@ HRESULT LightShader::Initialize()
 
 bool LightShader::PreRender(int iInstanceCount, XMINT2 textureTileCount, XMFLOAT4 ambientColor,
 							XMFLOAT4 diffuseColor, XMFLOAT4 specularColor, float specularPower,
-							XMFLOAT3 lightDirection, Camera *pCamera)
+							XMFLOAT3 lightDirection, XMFLOAT3 pointLightColor, float pointLightStrength,
+						    XMFLOAT3 pointLightPosition, Camera *pCamera)
 {
 	// Set the vertex input layout
 	if (iInstanceCount == 1)
@@ -226,6 +227,9 @@ bool LightShader::PreRender(int iInstanceCount, XMINT2 textureTileCount, XMFLOAT
 	pLightPSBufferData->specularColor = specularColor;
 	pLightPSBufferData->specularPower = specularPower;
 	pLightPSBufferData->lightDirection = lightDirection;
+	pLightPSBufferData->pointLightColor = pointLightColor;
+	pLightPSBufferData->pointLightStrength = pointLightStrength;
+	pLightPSBufferData->pointLightPosition = pointLightPosition;
 
 	// Unlock the light pixel shader buffer
 	m_pImmediateContext->Unmap(m_pLightPSBuffer, 0);
@@ -252,7 +256,8 @@ bool LightShader::Render(TxtModel *pModel, Camera *pCamera)
 
 	if (!PreRender(pModel->GetInstanceCount(), pModel->GetTextureTileCount(), pModel->GetAmbientColor(),
 				   pModel->GetDiffuseColor(), pModel->GetSpecularColor(), pModel->GetSpecularPower(),
-				   pModel->GetLightDirection(), pCamera))
+				   pModel->GetLightDirection(), pModel->GetPointLightColor(), pModel->GetPointLightStrength(), 
+				   pModel->GetPointLightPosition(), pCamera))
 	{
 		return false;
 	}
@@ -265,7 +270,8 @@ bool LightShader::Render(TxtModel *pModel, Camera *pCamera)
 bool LightShader::PreRender(Model *pModel, Camera *pCamera)
 {
 	return PreRender(1, XMINT2(1, 1), pModel->GetAmbientColor(), pModel->GetDiffuseColor(), pModel->GetSpecularColor(), 
-					 pModel->GetSpecularPower(), pModel->GetLightDirection(), pCamera);
+					 pModel->GetSpecularPower(), pModel->GetLightDirection(), pModel->GetPointLightColor(), pModel->GetPointLightStrength(),
+					 pModel->GetPointLightPosition(), pCamera);
 }
 
 void LightShader::Render(Mesh *pMesh, Camera *pCamera)

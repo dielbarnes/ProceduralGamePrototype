@@ -31,6 +31,9 @@ public:
 	XMFLOAT4 GetSpecularColor();
 	float GetSpecularPower();
 	XMFLOAT3 GetLightDirection();
+	XMFLOAT3 GetPointLightColor();
+	float GetPointLightStrength();
+	XMFLOAT3 GetPointLightPosition();
 
 	bool Initialize(std::string strFilePath);
 	static HRESULT Create1x1ColorTexture(ID3D11Device *pDevice, unsigned char color[4], ID3D11ShaderResourceView **pTexture);
@@ -46,6 +49,9 @@ private:
 	XMFLOAT4 m_specularColor;
 	float m_fSpecularPower;
 	XMFLOAT3 m_lightDirection;
+	XMFLOAT3 m_pointLightColor;
+	float m_fPointLightStrength;
+	XMFLOAT3 m_pointLightPosition;
 
 	void ProcessNode(aiNode *pNode, const aiScene *pScene, XMMATRIX parentTransformMatrix);
 	Mesh* ProcessMesh(aiMesh *pMesh, const aiScene *pScene, XMMATRIX transformMatrix);

@@ -26,6 +26,9 @@ Model::Model(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext, ID3D
 	m_fSpecularPower = 24.0f;
 
 	m_lightDirection = XMFLOAT3(0.0f, -0.8f, 0.5f);
+	m_pointLightColor = XMFLOAT3(140.0f / 255.0f, 200.0f / 255.0f, 255.0f / 255.0f);
+	m_fPointLightStrength = 0.5f;
+	m_pointLightPosition = XMFLOAT3(0.0f, 3.0f, 0.0f);
 }
 
 Model::~Model()
@@ -282,6 +285,19 @@ float Model::GetSpecularPower()
 XMFLOAT3 Model::GetLightDirection()
 {
 	return m_lightDirection;
+}
+
+XMFLOAT3 Model::GetPointLightColor()
+{
+	return m_pointLightColor;
+}
+float Model::GetPointLightStrength()
+{
+	return m_fPointLightStrength;
+}
+XMFLOAT3 Model::GetPointLightPosition()
+{
+	return m_pointLightPosition;
 }
 
 #pragma endregion

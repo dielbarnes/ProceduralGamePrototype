@@ -34,6 +34,9 @@ TxtModel::TxtModel()
 	m_fSpecularPower = 24.0f;
 
 	m_lightDirection = XMFLOAT3(0.0f, -0.8f, 0.5f);
+	m_pointLightColor = XMFLOAT3(0.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f);
+	m_fPointLightStrength = 0.0f;
+	m_pointLightPosition = XMFLOAT3(0.0f, 3.0f, 0.0f);
 }
 
 TxtModel::~TxtModel()
@@ -203,6 +206,19 @@ void TxtModel::SetLightDirection(float x, float y, float z)
 XMFLOAT3 TxtModel::GetLightDirection()
 {
 	return m_lightDirection;
+}
+
+XMFLOAT3 TxtModel::GetPointLightColor()
+{
+	return m_pointLightColor;
+}
+float TxtModel::GetPointLightStrength()
+{
+	return m_fPointLightStrength;
+}
+XMFLOAT3 TxtModel::GetPointLightPosition()
+{
+	return m_pointLightPosition;
 }
 
 #pragma endregion

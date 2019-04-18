@@ -29,6 +29,10 @@ struct LightPSBuffer // For pixel shader
 	XMFLOAT4 specularColor;
 	float specularPower;
 	XMFLOAT3 lightDirection;
+	XMFLOAT3 pointLightColor;
+	float pointLightStrength;
+	XMFLOAT3 pointLightPosition;
+	float padding;
 };
 
 class LightShader : public Shader
@@ -51,7 +55,8 @@ private:
 
 	bool PreRender(int iInstanceCount, XMINT2 textureTileCount, XMFLOAT4 ambientColor,
 				   XMFLOAT4 diffuseColor, XMFLOAT4 specularColor, float specularPower,
-				   XMFLOAT3 lightDirection, Camera *pCamera);
+				   XMFLOAT3 lightDirection, XMFLOAT3 pointLightColor, float pointLightStrength, 
+				   XMFLOAT3 pointLightPosition, Camera *pCamera);
 	void Render(int iInstanceCount, XMMATRIX worldMatrix, std::vector<ID3D11ShaderResourceView*> textures, 
 				int iIndexCount, Camera *pCamera);
 };

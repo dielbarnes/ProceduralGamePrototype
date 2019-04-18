@@ -5,6 +5,7 @@
 // Reference:
 // RasterTek Tutorial 7: 3D Model Rendering (http://www.rastertek.com/dx11tut07.html)
 // RasterTek Tutorial 10: Specular Lighting (http://www.rastertek.com/dx11tut10.html)
+// C++ DirectX 11 Engine Tutorial 58 - Light Attenuation (https://youtu.be/RzsPqrmDzQg)
 //
 
 Texture2D shaderTexture;
@@ -19,6 +20,10 @@ cbuffer LightPSBuffer
 	float4 specularColor;
 	float specularPower;
 	float3 lightDirection;
+    float3 pointLightColor;
+    float pointLightStrength;
+    float3 pointLightPosition;
+    float padding;
 };
 
 // Input
@@ -29,6 +34,7 @@ struct PS_INPUT
 	float2 texCoord : TEXCOORD0;
 	float3 normal : NORMAL;
 	float3 viewDirection : TEXCOORD1;
+    float4 worldPos : WORLD_POSITION;
 };
 
 // Entry point
@@ -61,12 +67,28 @@ float4 PS(PS_INPUT input) : SV_TARGET
 
 	// Sample the pixel color from the texture using the sampler at this texture coordinate
 	float4 textureColor = shaderTexture.Sample(samplerState, input.texCoord);
+	
+	// Add point light
+	// Attenuation equation: 1 / ( A + (B*x) + (C*(x^2)) )
+	// x - distance of light to the pixel
+	// A - constant to avoid division by zero
+	// B - linear factor
+	// C - exponential factor
 
-	// Multiply the texture color
-	outputColor *= textureColor;
+    float dynamicLightAttenuation_a = 1.0f;
+    float dynamicLightAttenuation_b = 0.1f;
+    float dynamicLightAttenuation_c = 0.1f;
+    
+    float distanceToLight = distance(pointLightPosition, input.worldPos.xyz);
+    float attenuationFactor = 1 / (dynamicLightAttenuation_a + dynamicLightAttenuation_b * distanceToLight + dynamicLightAttenuation_c * pow(distanceToLight, 2));
+    float3 diffuseLight = attenuationFactor * pointLightStrength * pointLightColor;
+    outputColor += float4(diffuseLight, 1.0f);
+
+    // Multiply the texture color
+    outputColor *= textureColor;
 
 	// Add the specular component last
-	outputColor = saturate(outputColor + specular);
+    outputColor = saturate(outputColor + specular);
 
-	return outputColor;
+    return outputColor;
 }

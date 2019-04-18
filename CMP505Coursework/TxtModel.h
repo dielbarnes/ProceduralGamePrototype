@@ -68,6 +68,9 @@ public:
 	float GetSpecularPower();
 	void SetLightDirection(float x, float y, float z);
 	XMFLOAT3 GetLightDirection();
+	XMFLOAT3 GetPointLightColor();
+	float GetPointLightStrength();
+	XMFLOAT3 GetPointLightPosition();
 
 	bool InitializeBuffers(ID3D11Device *pDevice, int iInstanceCount, Instance *instances = nullptr);
 	void Render(ID3D11DeviceContext *pImmediateContext);
@@ -88,4 +91,7 @@ private:
 	XMFLOAT4 m_specularColor;
 	float m_fSpecularPower;
 	XMFLOAT3 m_lightDirection;
+	XMFLOAT3 m_pointLightColor;
+	float m_fPointLightStrength;
+	XMFLOAT3 m_pointLightPosition;
 };
