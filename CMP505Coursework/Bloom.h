@@ -27,17 +27,17 @@ struct BloomCombineBuffer // For pixel shader
 class Bloom
 {
 public:
-	Bloom(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext, ID3D11ShaderResourceView *pSceneTexture);
+	Bloom(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext);
 	~Bloom();
 
-	HRESULT Initialize(int iWindowWidth, int iWindowHeight);
-	bool RenderBloomExtractToTexture(ID3D11ShaderResourceView *pTexture);
-	bool RenderHorizontalBlurToTexture(ID3D11ShaderResourceView *pTexture);
-	bool RenderVerticalBlurToTexture();
-	bool RenderBloomCombine(PostProcessQuad *pQuad, ID3D11ShaderResourceView *pTexture1, ID3D11ShaderResourceView *pTexture2);
+	ID3D11ShaderResourceView* GetExtractTexture();
+	ID3D11ShaderResourceView* GetBlurTexture();
 
-	OffScreenRenderer *m_pExtractRenderer;
-	Blur *m_pBlur;
+	HRESULT Initialize(int iWindowWidth, int iWindowHeight);
+	bool RenderBloomExtractToTexture(PostProcessQuad *pQuad, ID3D11ShaderResourceView *pSceneTexture);
+	bool RenderHorizontalBlurToTexture(PostProcessQuad *pQuad, ID3D11ShaderResourceView *pInputTexture);
+	bool RenderVerticalBlurToTexture(PostProcessQuad *pQuad);
+	bool RenderBloomCombine(PostProcessQuad *pQuad, ID3D11ShaderResourceView *pSceneTexture);
 
 private:
 	ID3D11Device *m_pDevice;
@@ -49,7 +49,6 @@ private:
 	ID3D11Buffer *m_pExtractBuffer;
 	ID3D11Buffer *m_pCombineBuffer;
 	ID3D11SamplerState *m_pSamplerState;
-	ID3D11ShaderResourceView *m_pSceneTexture;
-	PostProcessQuad *m_pPostProcessQuad;
-	
+	OffScreenRenderer *m_pExtractRenderer;
+	Blur *m_pBlur;
 };

@@ -4,9 +4,11 @@
 //
 // Reference:
 // Real-Time 3D Rendering With DirectX And HLSL by Paul Varcholik (Chapter 18: Post-Processing)
+// Microsoft DirectXTK Tutorial: PostprocessSpriteTest (https://github.com/walbourn/directxtk-tutorials/blob/master/DX11/PostprocessSpriteTest)
 //
 
-static const float3 grayScaleIntensity = { 0.299f, 0.587f, 0.114f };
+// The constants 0.3, 0.59, and 0.11 are chosen because the human eye is more sensitive to green light, and less to blue
+static const float3 grayScaleIntensity = { 0.3f, 0.59f, 0.11f };
 
 Texture2D sceneTexture;
 Texture2D bloomTexture;
@@ -48,6 +50,7 @@ float4 PS(PS_INPUT input) : SV_TARGET
     sceneColor = AdjustSaturation(sceneColor, sceneSaturation) * sceneIntensity;
     bloomColor = AdjustSaturation(bloomColor, bloomSaturation) * bloomIntensity;
     
+	// Darken down the base image in areas where there is a lot of bloom to prevent things looking excessively burned-out
     sceneColor *= (1 - saturate(bloomColor));
 
     return sceneColor + bloomColor;

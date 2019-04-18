@@ -10,7 +10,7 @@
 
 #pragma region Init
 
-Bloom::Bloom(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext, ID3D11ShaderResourceView *pSceneTexture)
+Bloom::Bloom(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext)
 {
 	m_pDevice = pDevice;
 	m_pImmediateContext = pImmediateContext;
@@ -21,10 +21,8 @@ Bloom::Bloom(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext, ID3D
 	m_pExtractBuffer = nullptr;
 	m_pCombineBuffer = nullptr;
 	m_pSamplerState = nullptr;
-	m_pSceneTexture = pSceneTexture;
 	m_pExtractRenderer = new OffScreenRenderer(pDevice, pImmediateContext);
-	m_pPostProcessQuad = new PostProcessQuad();
-	m_pBlur = new Blur(pDevice, pImmediateContext, m_pExtractRenderer->GetOutputTexture());
+	m_pBlur = new Blur(pDevice, pImmediateContext);
 }
 
 Bloom::~Bloom()
@@ -37,7 +35,6 @@ Bloom::~Bloom()
 	SAFE_RELEASE(m_pCombineBuffer)
 	SAFE_RELEASE(m_pSamplerState)
 	SAFE_DELETE(m_pExtractRenderer)
-	SAFE_DELETE(m_pPostProcessQuad)
 	SAFE_DELETE(m_pBlur)
 }
 
@@ -120,19 +117,7 @@ HRESULT Bloom::Initialize(int iWindowWidth, int iWindowHeight)
 
 	// Create the vertex input layout (should be the same as vertex struct)
 
-	/*D3D11_INPUT_ELEMENT_DESC vertexInputDesc[] =
-	{
-		{ "POSITION",						// Semantic name
-		  0,								// Semantic index (only needed when there is more than one element with the same semantic)
-		  DXGI_FORMAT_R32G32B32A32_FLOAT,	// 128-bit float format that supports 32 bits per channel
-		  0,								// Input slot (index of vertex buffer the GPU should fetch ranging form 0 to 15)
-		  0,								// Offset in bytes between each element (tells the GPU the memory location to start fetching the data for this element); D3D11_APPEND_ALIGNED_ELEMENT defines the current element directly after the previous one
-		  D3D11_INPUT_PER_VERTEX_DATA,		// Input classification
-		  0 },								// Number of instances to draw using the same per-instance data before advancing in the buffer by one element (must be 0 for an element that contains per-vertex data)
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};*/
-
-		D3D11_INPUT_ELEMENT_DESC vertexInputDesc[] =
+	D3D11_INPUT_ELEMENT_DESC vertexInputDesc[] =
 	{
 		{ "POSITION",					// Semantic name
 		  0,							// Semantic index (only needed when there is more than one element with the same semantic)
@@ -209,13 +194,6 @@ HRESULT Bloom::Initialize(int iWindowWidth, int iWindowHeight)
 		return result;
 	}
 
-	// Initialize post-process quad
-	result = m_pPostProcessQuad->InitializeBuffers(m_pDevice);
-	if (FAILED(result))
-	{
-		return result;
-	}
-
 	// Initialize blur
 	result = m_pBlur->Initialize(iWindowWidth, iWindowHeight);
 	if (FAILED(result))
@@ -228,15 +206,26 @@ HRESULT Bloom::Initialize(int iWindowWidth, int iWindowHeight)
 
 #pragma endregion
 
+#pragma region Getters
+
+ID3D11ShaderResourceView* Bloom::GetExtractTexture()
+{
+	return m_pExtractRenderer->GetOutputTexture();
+}
+
+ID3D11ShaderResourceView* Bloom::GetBlurTexture()
+{
+	return m_pBlur->GetOutputTexture();
+}
+
+#pragma endregion
+
 #pragma region Render
 
-bool Bloom::RenderBloomExtractToTexture(ID3D11ShaderResourceView *pTexture)
+bool Bloom::RenderBloomExtractToTexture(PostProcessQuad *pQuad, ID3D11ShaderResourceView *pSceneTexture)
 {
-	// Set and clear render target
+	// Set and clear the render target
 	m_pExtractRenderer->SetRenderTarget();
-
-	// Render quad
-	//m_pPostProcessQuad->Render(m_pImmediateContext);
 
 	// Set the vertex input layout
 	m_pImmediateContext->IASetInputLayout(m_pVertexInputLayout);
@@ -259,7 +248,7 @@ bool Bloom::RenderBloomExtractToTexture(ID3D11ShaderResourceView *pTexture)
 	BloomExtractBuffer *pExtractBufferData = (BloomExtractBuffer*)mappedResource.pData;
 
 	// Copy the bloom threshold into the extract buffer
-	pExtractBufferData->threshold = 0.45f;
+	pExtractBufferData->threshold = 0.35f;
 	pExtractBufferData->padding = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	// Unlock the extract buffer
@@ -270,8 +259,7 @@ bool Bloom::RenderBloomExtractToTexture(ID3D11ShaderResourceView *pTexture)
 	m_pImmediateContext->PSSetConstantBuffers(0, 1, psConstantBuffers);
 
 	// Set the textures to be used by the pixel shader
-	//m_pImmediateContext->PSSetShaderResources(0, 1, &m_pSceneTexture);
-	m_pImmediateContext->PSSetShaderResources(0, 1, &pTexture);
+	m_pImmediateContext->PSSetShaderResources(0, 1, &pSceneTexture);
 
 	// Set the sampler state in the pixel shader
 	m_pImmediateContext->PSSetSamplers(0, 1, &m_pSamplerState);
@@ -280,30 +268,26 @@ bool Bloom::RenderBloomExtractToTexture(ID3D11ShaderResourceView *pTexture)
 	m_pImmediateContext->PSSetShader(m_pExtractPixelShader, nullptr, 0);
 
 	// Render triangles
-	m_pImmediateContext->DrawIndexed(m_pPostProcessQuad->GetIndexCount(), 0, 0);
+	m_pImmediateContext->DrawIndexed(pQuad->GetIndexCount(), 0, 0);
 
 	return true;
 }
 
-bool Bloom::RenderHorizontalBlurToTexture(ID3D11ShaderResourceView *pTexture)
+bool Bloom::RenderHorizontalBlurToTexture(PostProcessQuad *pQuad, ID3D11ShaderResourceView *pInputTexture)
 {
 	// For debugging only: save bloom extract texture as jpg
 	//m_pExtractRenderer->SaveTextureToFile();
 
-	return m_pBlur->RenderHorizontalBlurToTexture(pTexture);
+	return m_pBlur->RenderHorizontalBlurToTexture(pQuad, pInputTexture);
 }
 
-bool Bloom::RenderVerticalBlurToTexture()
+bool Bloom::RenderVerticalBlurToTexture(PostProcessQuad *pQuad)
 {
-	return m_pBlur->RenderVerticalBlurToTexture();
+	return m_pBlur->RenderVerticalBlurToTexture(pQuad);
 }
 
-bool Bloom::RenderBloomCombine(PostProcessQuad *pQuad, ID3D11ShaderResourceView *pTexture1, ID3D11ShaderResourceView *pTexture2)
+bool Bloom::RenderBloomCombine(PostProcessQuad *pQuad, ID3D11ShaderResourceView *pSceneTexture)
 {
-	// Render quad
-	//m_pPostProcessQuad->Render(m_pImmediateContext);
-	pQuad->Render(m_pImmediateContext);
-
 	// Set the vertex input layout
 	m_pImmediateContext->IASetInputLayout(m_pVertexInputLayout);
 
@@ -325,7 +309,7 @@ bool Bloom::RenderBloomCombine(PostProcessQuad *pQuad, ID3D11ShaderResourceView 
 	BloomCombineBuffer *pCombineBufferData = (BloomCombineBuffer*)mappedResource.pData;
 
 	// Copy the bloom and scene data into the combine buffer
-	pCombineBufferData->bloomIntensity = 1.25f;
+	pCombineBufferData->bloomIntensity = 2.0f;
 	pCombineBufferData->bloomSaturation = 1.0f;
 	pCombineBufferData->sceneIntensity = 1.0f;
 	pCombineBufferData->sceneSaturation = 1.0f;
@@ -338,10 +322,9 @@ bool Bloom::RenderBloomCombine(PostProcessQuad *pQuad, ID3D11ShaderResourceView 
 	m_pImmediateContext->PSSetConstantBuffers(0, 1, psConstantBuffers);
 
 	// Set the textures to be used by the pixel shader
-	//m_pImmediateContext->PSSetShaderResources(0, 1, &m_pSceneTexture);
-	//m_pImmediateContext->PSSetShaderResources(1, 1, m_pBlur->GetOutputTexture());
-	m_pImmediateContext->PSSetShaderResources(0, 1, &pTexture1);
-	m_pImmediateContext->PSSetShaderResources(1, 1, &pTexture2);
+	m_pImmediateContext->PSSetShaderResources(0, 1, &pSceneTexture);
+	ID3D11ShaderResourceView *pBloomTexture = m_pBlur->GetOutputTexture();
+	m_pImmediateContext->PSSetShaderResources(1, 1, &pBloomTexture);
 
 	// Set the sampler state in the pixel shader
 	m_pImmediateContext->PSSetSamplers(0, 1, &m_pSamplerState);
@@ -350,7 +333,7 @@ bool Bloom::RenderBloomCombine(PostProcessQuad *pQuad, ID3D11ShaderResourceView 
 	m_pImmediateContext->PSSetShader(m_pCombinePixelShader, nullptr, 0);
 
 	// Render triangles
-	m_pImmediateContext->DrawIndexed(m_pPostProcessQuad->GetIndexCount(), 0, 0);
+	m_pImmediateContext->DrawIndexed(pQuad->GetIndexCount(), 0, 0);
 
 	return true;
 }

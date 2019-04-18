@@ -13,7 +13,6 @@
 #include "TxtModel.h"
 #include "Model.h"
 #include "Camera.h"
-#include "PostProcessQuad.h"
 
 struct LightVSBuffer // For vertex shader
 {
@@ -42,7 +41,6 @@ public:
 	bool Render(TxtModel *pModel, Camera *pCamera);
 	bool PreRender(Model *pModel, Camera *pCamera);
 	void Render(Mesh *pMesh, Camera *pCamera);
-	void Render(PostProcessQuad *pQuad, ID3D11ShaderResourceView *pTexture);
 
 private:
 	ID3D11VertexShader *m_pInstanceVertexShader;

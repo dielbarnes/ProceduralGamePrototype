@@ -4,6 +4,7 @@
 //
 // Reference:
 // Real-Time 3D Rendering With DirectX And HLSL by Paul Varcholik (Chapter 18: Post-Processing)
+// Microsoft DirectXTK Tutorial: PostprocessSpriteTest (https://github.com/walbourn/directxtk-tutorials/blob/master/DX11/PostprocessSpriteTest)
 //
 
 #define BLUR_SAMPLE_COUNT 9

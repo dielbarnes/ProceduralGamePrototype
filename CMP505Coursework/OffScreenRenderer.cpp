@@ -32,6 +32,7 @@ HRESULT OffScreenRenderer::Initialize(int iWindowWidth, int iWindowHeight)
 {
 	HRESULT result = S_OK;
 
+	// Create the 2D texture
 	D3D11_TEXTURE2D_DESC textureDesc = {};
 	textureDesc.Width = iWindowWidth;
 	textureDesc.Height = iWindowHeight;
@@ -44,7 +45,6 @@ HRESULT OffScreenRenderer::Initialize(int iWindowWidth, int iWindowHeight)
 	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;	// The texture can be used both as a render target and as an input to a shader
 	textureDesc.CPUAccessFlags = 0;													// CPU access is not required
 	textureDesc.MiscFlags = 0;														// Other resource options
-	
 	result = m_pDevice->CreateTexture2D(&textureDesc,
 										nullptr,		// Subresources for the texture
 										&m_p2DTexture);

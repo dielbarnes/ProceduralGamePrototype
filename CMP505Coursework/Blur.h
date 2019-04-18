@@ -24,14 +24,14 @@ struct BlurSampleBuffer // For pixel shader
 class Blur
 {
 public:
-	Blur(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext, ID3D11ShaderResourceView *pSceneTexture);
+	Blur(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext);
 	~Blur();
 
 	ID3D11ShaderResourceView* GetOutputTexture();
 
 	HRESULT Initialize(int iWindowWidth, int iWindowHeight);
-	bool RenderHorizontalBlurToTexture(ID3D11ShaderResourceView *pTexture);
-	bool RenderVerticalBlurToTexture();
+	bool RenderHorizontalBlurToTexture(PostProcessQuad *pQuad, ID3D11ShaderResourceView *pInputTexture);
+	bool RenderVerticalBlurToTexture(PostProcessQuad *pQuad);
 
 private:
 	ID3D11Device *m_pDevice;
@@ -41,11 +41,9 @@ private:
 	ID3D11InputLayout *m_pVertexInputLayout;
 	ID3D11Buffer *m_pSampleBuffer;
 	ID3D11SamplerState *m_pSamplerState;
-	ID3D11ShaderResourceView *m_pSceneTexture;
 	ID3D11ShaderResourceView *m_pOutputTexture;
 	OffScreenRenderer *m_pHorizontalBlurRenderer;
 	OffScreenRenderer *m_pVerticalBlurRenderer;
-	PostProcessQuad *m_pPostProcessQuad;
 	std::vector<XMFLOAT2> m_horizontalSampleOffsets;
 	std::vector<XMFLOAT2> m_verticalSampleOffsets;
 	std::vector<float> m_sampleWeights;
@@ -55,5 +53,5 @@ private:
 	void InitializeSampleOffsets();
 	void InitializeSampleWeights();
 	float GetWeight(float f);
-	bool Render(std::vector<XMFLOAT2> sampleOffsets, ID3D11ShaderResourceView *pTexture);
+	bool Render(PostProcessQuad *pQuad, std::vector<XMFLOAT2> sampleOffsets, ID3D11ShaderResourceView *pTexture);
 };

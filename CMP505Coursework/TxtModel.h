@@ -25,11 +25,11 @@ struct Vertex
 
 	Vertex() {}
 
-	Vertex(XMFLOAT3 pos, XMFLOAT2 texCoord)
+	Vertex(XMFLOAT3 pos, XMFLOAT2 texCoord, XMFLOAT3 norm)
 	{
 		position = pos;
 		textureCoordinates = texCoord;
-		normal = XMFLOAT3(0.0f, 0.0f, 1.0f);
+		normal = norm;
 	}
 };
 

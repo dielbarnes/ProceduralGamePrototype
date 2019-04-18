@@ -10,7 +10,7 @@
 
 #pragma region Init
 
-Blur::Blur(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext, ID3D11ShaderResourceView *pSceneTexture)
+Blur::Blur(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext)
 {
 	m_pDevice = pDevice;
 	m_pImmediateContext = pImmediateContext;
@@ -19,11 +19,9 @@ Blur::Blur(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext, ID3D11
 	m_pVertexInputLayout = nullptr;
 	m_pSampleBuffer = nullptr;
 	m_pSamplerState = nullptr;
-	m_pSceneTexture = pSceneTexture;
 	m_pOutputTexture = nullptr;
 	m_pHorizontalBlurRenderer = new OffScreenRenderer(pDevice, pImmediateContext);
 	m_pVerticalBlurRenderer = new OffScreenRenderer(pDevice, pImmediateContext);
-	m_pPostProcessQuad = new PostProcessQuad();
 	m_fBlurAmount = 8.0f;
 }
 
@@ -37,7 +35,6 @@ Blur::~Blur()
 	SAFE_RELEASE(m_pOutputTexture)
 	SAFE_DELETE(m_pHorizontalBlurRenderer)
 	SAFE_DELETE(m_pVerticalBlurRenderer)
-	SAFE_DELETE(m_pPostProcessQuad)
 }
 
 HRESULT Blur::Initialize(int iWindowWidth, int iWindowHeight)
@@ -96,19 +93,7 @@ HRESULT Blur::Initialize(int iWindowWidth, int iWindowHeight)
 
 	// Create the vertex input layout (should be the same as vertex struct)
 
-	/*D3D11_INPUT_ELEMENT_DESC vertexInputDesc[] =
-	{
-		{ "POSITION",						// Semantic name
-		  0,								// Semantic index (only needed when there is more than one element with the same semantic)
-		  DXGI_FORMAT_R32G32B32A32_FLOAT,	// 128-bit float format that supports 32 bits per channel
-		  0,								// Input slot (index of vertex buffer the GPU should fetch ranging form 0 to 15)
-		  0,								// Offset in bytes between each element (tells the GPU the memory location to start fetching the data for this element); D3D11_APPEND_ALIGNED_ELEMENT defines the current element directly after the previous one
-		  D3D11_INPUT_PER_VERTEX_DATA,		// Input classification
-		  0 },								// Number of instances to draw using the same per-instance data before advancing in the buffer by one element (must be 0 for an element that contains per-vertex data)
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};*/
-
-		D3D11_INPUT_ELEMENT_DESC vertexInputDesc[] =
+	D3D11_INPUT_ELEMENT_DESC vertexInputDesc[] =
 	{
 		{ "POSITION",					// Semantic name
 		  0,							// Semantic index (only needed when there is more than one element with the same semantic)
@@ -184,13 +169,6 @@ HRESULT Blur::Initialize(int iWindowWidth, int iWindowHeight)
 		return result;
 	}
 
-	// Initialize post-process quad
-	result = m_pPostProcessQuad->InitializeBuffers(m_pDevice);
-	if (FAILED(result))
-	{
-		return result;
-	}
-
 	// Initialize sample offsets and weights
 	InitializeSampleOffsets();
 	InitializeSampleWeights();
@@ -261,12 +239,10 @@ ID3D11ShaderResourceView* Blur::GetOutputTexture()
 
 #pragma region Render
 
-bool Blur::RenderHorizontalBlurToTexture(ID3D11ShaderResourceView *pTexture)
+bool Blur::RenderHorizontalBlurToTexture(PostProcessQuad *pQuad, ID3D11ShaderResourceView *pInputTexture)
 {
 	m_pHorizontalBlurRenderer->SetRenderTarget();
-	//m_pPostProcessQuad->Render(m_pImmediateContext);
-	//if (!Render(m_horizontalSampleOffsets, m_pSceneTexture))
-		if (!Render(m_horizontalSampleOffsets, pTexture))
+	if (!Render(pQuad, m_horizontalSampleOffsets, pInputTexture))
 	{
 		return false;
 	}
@@ -274,11 +250,10 @@ bool Blur::RenderHorizontalBlurToTexture(ID3D11ShaderResourceView *pTexture)
 	return true;
 }
 
-bool Blur::RenderVerticalBlurToTexture()
+bool Blur::RenderVerticalBlurToTexture(PostProcessQuad *pQuad)
 {
 	m_pVerticalBlurRenderer->SetRenderTarget();
-	//m_pPostProcessQuad->Render(m_pImmediateContext);
-	if (!Render(m_verticalSampleOffsets, m_pHorizontalBlurRenderer->GetOutputTexture()))
+	if (!Render(pQuad, m_verticalSampleOffsets, m_pHorizontalBlurRenderer->GetOutputTexture()))
 	{
 		return false;
 	}
@@ -288,7 +263,7 @@ bool Blur::RenderVerticalBlurToTexture()
 	return true;
 }
 
-bool Blur::Render(std::vector<XMFLOAT2> sampleOffsets, ID3D11ShaderResourceView *pTexture)
+bool Blur::Render(PostProcessQuad *pQuad, std::vector<XMFLOAT2> sampleOffsets, ID3D11ShaderResourceView *pTexture)
 {
 	// Set the vertex input layout
 	m_pImmediateContext->IASetInputLayout(m_pVertexInputLayout);
@@ -313,8 +288,6 @@ bool Blur::Render(std::vector<XMFLOAT2> sampleOffsets, ID3D11ShaderResourceView 
 	BlurSampleBuffer *pSampleBufferData = (BlurSampleBuffer*)mappedResource.pData;
 
 	// Copy the sample offsets and weights into the sample buffer
-	//std::copy(sampleOffsets.begin(), sampleOffsets.end(), pSampleBufferData->sampleOffsets);
-	//std::copy(m_sampleWeights.begin(), m_sampleWeights.end(), pSampleBufferData->sampleWeights);
 	for (int i = 0; i < BLUR_SAMPLE_COUNT; i++)
 	{
 		pSampleBufferData->sampleOffsets[i] = XMFLOAT4(sampleOffsets[i].x, sampleOffsets[i].y, 0.0f, 0.0f);
@@ -343,9 +316,9 @@ bool Blur::Render(std::vector<XMFLOAT2> sampleOffsets, ID3D11ShaderResourceView 
 	m_pImmediateContext->PSSetShaderResources(0, 1, &pTexture);
 
 	// Render triangles
-	m_pImmediateContext->DrawIndexed(m_pPostProcessQuad->GetIndexCount(),
-									 0,										// Location of the first index read by the GPU from the index buffer
-									 0);									// Value added to each index before reading a vertex from the vertex buffer
+	m_pImmediateContext->DrawIndexed(pQuad->GetIndexCount(),
+									 0,							// Location of the first index read by the GPU from the index buffer
+									 0);						// Value added to each index before reading a vertex from the vertex buffer
 
 	return true;
 }

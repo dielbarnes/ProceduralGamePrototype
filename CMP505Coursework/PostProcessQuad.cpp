@@ -7,7 +7,6 @@
 //
 
 #include "PostProcessQuad.h"
-#include "TxtModel.h"
 
 #pragma region Init
 
@@ -30,24 +29,15 @@ HRESULT PostProcessQuad::InitializeBuffers(ID3D11Device *pDevice)
 
 	// Create the vertex buffer
 
-	/*PostProcessVertex vertices[] =
-	{
-		PostProcessVertex(XMFLOAT4(-1.0f, -1.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 1.0f)), // Bottom left
-		PostProcessVertex(XMFLOAT4(-1.0f, 1.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)), // Top left
-		PostProcessVertex(XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f), XMFLOAT2(1.0f, 0.0f)), // Top right
-		PostProcessVertex(XMFLOAT4(1.0f, -1.0f, 0.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)) // Bottom right
-	};*/
-
 	Vertex vertices[] =
 	{
-		Vertex(XMFLOAT3(-1.0f, -1.0f, 0.11f), XMFLOAT2(0.0f, 1.0f)), // Bottom left
-		Vertex(XMFLOAT3(-1.0f, 1.0f, 0.11f), XMFLOAT2(0.0f, 0.0f)), // Top left
-		Vertex(XMFLOAT3(1.0f, 1.0f, 0.11f), XMFLOAT2(1.0f, 0.0f)), // Top right
-		Vertex(XMFLOAT3(1.0f, -1.0f, 0.11f), XMFLOAT2(1.0f, 1.0f)) // Bottom right
+		Vertex(XMFLOAT3(-1.0f, -1.0f, 0.0f), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f)), // Bottom left
+		Vertex(XMFLOAT3(-1.0f, 1.0f, 0.0f), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 1.0f)), // Top left
+		Vertex(XMFLOAT3(1.0f, 1.0f, 0.0f), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 1.0f)), // Top right
+		Vertex(XMFLOAT3(1.0f, -1.0f, 0.0f), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f)) // Bottom right
 	};
 
 	D3D11_BUFFER_DESC bufferDesc = {};
-	//bufferDesc.ByteWidth = sizeof(PostProcessVertex) * ARRAYSIZE(vertices);
 	bufferDesc.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertices);
 	bufferDesc.Usage = D3D11_USAGE_DEFAULT;							// Require read and write access by the GPU
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;				// Bind the buffer as a vertex buffer to the input assembler stage
@@ -69,7 +59,6 @@ HRESULT PostProcessQuad::InitializeBuffers(ID3D11Device *pDevice)
 	{
 		0, 1, 2,
 		0, 2, 3
-		//1,2,0,0,2,3
 	};
 
 	m_iIndexCount = ARRAYSIZE(indices);
@@ -106,7 +95,6 @@ void PostProcessQuad::Render(ID3D11DeviceContext *pImmediateContext)
 {
 	// Set the vertex and index buffers to active in the input assembler so they can be rendered (put them on the graphics pipeline)
 
-	//UINT uiStrides = sizeof(PostProcessVertex);
 	UINT uiStrides = sizeof(Vertex);
 	UINT uiOffsets = 0;
 

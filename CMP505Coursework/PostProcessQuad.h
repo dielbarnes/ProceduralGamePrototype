@@ -10,21 +10,10 @@
 
 #include <d3d11.h>
 #include <directxmath.h>
+#include "TxtModel.h"
 #include "Utils.h"
 
 using namespace DirectX;
-
-struct PostProcessVertex
-{
-	XMFLOAT4 position;
-	XMFLOAT2 textureCoordinates;
-
-	PostProcessVertex(XMFLOAT4 pos, XMFLOAT2 texCoord)
-	{
-		position = pos;
-		textureCoordinates = texCoord;
-	}
-};
 
 class PostProcessQuad
 {

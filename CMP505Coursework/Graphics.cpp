@@ -25,6 +25,7 @@ Graphics::Graphics()
 	m_pResourceManager = nullptr;
 	m_pShaderManager = nullptr;
 	m_pOffScreenRenderer = nullptr;
+	m_pPostProcessQuad = nullptr;
 	m_pBloom = nullptr;
 }
 
@@ -46,6 +47,7 @@ Graphics::~Graphics()
 	SAFE_DELETE(m_pResourceManager)
 	SAFE_DELETE(m_pShaderManager)
 	SAFE_DELETE(m_pOffScreenRenderer)
+	SAFE_DELETE(m_pPostProcessQuad)
 	SAFE_DELETE(m_pBloom)
 }
 
@@ -58,16 +60,6 @@ bool Graphics::Initialize(int iWindowWidth, int iWindowHeight, HWND hWindow)
 	{
 		return false;
 	}
-
-
-
-
-	m_pPostProcessQuad = new PostProcessQuad();
-	m_pPostProcessQuad->InitializeBuffers(m_pDevice);
-
-
-
-
 
 	// Initialize camera
 	XMFLOAT3 position = XMFLOAT3(0.0f, 5.0f, -10.0f);
@@ -98,8 +90,12 @@ bool Graphics::Initialize(int iWindowWidth, int iWindowHeight, HWND hWindow)
 		return false;
 	}
 
+	// Initialize post-process quad
+	m_pPostProcessQuad = new PostProcessQuad();
+	m_pPostProcessQuad->InitializeBuffers(m_pDevice);
+
 	// Initialize bloom
-	m_pBloom = new Bloom(m_pDevice, m_pImmediateContext, m_pOffScreenRenderer->GetOutputTexture());
+	m_pBloom = new Bloom(m_pDevice, m_pImmediateContext);
 	if (FAILED(m_pBloom->Initialize(iWindowWidth, iWindowHeight)))
 	{
 		return false;
@@ -424,6 +420,7 @@ bool Graphics::Render(const float fDeltaTime)
 	HandleKeyboardInput(fDeltaTime);
 	m_pCamera->Update();
 
+	// Render to texture
 	m_pOffScreenRenderer->SetRenderTarget();
 
 	// Render models
@@ -476,63 +473,33 @@ bool Graphics::Render(const float fDeltaTime)
 	// For debugging only: save original scene texture as jpg
 	//m_pOffScreenRenderer->SaveTextureToFile();
 
+	// Render the quad
 	m_pPostProcessQuad->Render(m_pImmediateContext);
 
-	m_pBloom->RenderBloomExtractToTexture(m_pOffScreenRenderer->GetOutputTexture());
-
+	// Extract the bright spots in the scene
+	m_pBloom->RenderBloomExtractToTexture(m_pPostProcessQuad, m_pOffScreenRenderer->GetOutputTexture());
 	UnbindPixelShaderResources();
 	
-	m_pBloom->RenderHorizontalBlurToTexture(m_pBloom->m_pExtractRenderer->GetOutputTexture());
+	// Blur the bright spots
 
+	m_pBloom->RenderHorizontalBlurToTexture(m_pPostProcessQuad, m_pBloom->GetExtractTexture());
 	UnbindPixelShaderResources();
 
-	m_pBloom->RenderVerticalBlurToTexture();
-
+	m_pBloom->RenderVerticalBlurToTexture(m_pPostProcessQuad);
 	UnbindPixelShaderResources();
 
 	for (int i = 0; i < 2; i++)
 	{
-		m_pBloom->RenderHorizontalBlurToTexture(m_pBloom->m_pBlur->GetOutputTexture());
-
+		m_pBloom->RenderHorizontalBlurToTexture(m_pPostProcessQuad, m_pBloom->GetBlurTexture());
 		UnbindPixelShaderResources();
 
-		m_pBloom->RenderVerticalBlurToTexture();
-
+		m_pBloom->RenderVerticalBlurToTexture(m_pPostProcessQuad);
 		UnbindPixelShaderResources();
 	}
 
-	SetRenderTarget();
-
-	m_pBloom->RenderBloomCombine(m_pPostProcessQuad, m_pOffScreenRenderer->GetOutputTexture(), m_pBloom->m_pBlur->GetOutputTexture());
-
-	//SetRenderTarget();
-	//UnbindPixelShaderResources();
-
-	//m_pShaderManager->GetLightShader()->Render(m_pPostProcessQuad, );
-
-
-	// Extract the bright spots in the scene
-	//m_pBloom->RenderBloomExtractToTexture();
-
-	//SetRenderTarget();
-	//UnbindPixelShaderResources();
-
-	// Blur the bright spots
-
-	/*m_pBloom->RenderHorizontalBlurToTexture();
-
-	SetRenderTarget();
-	UnbindPixelShaderResources();
-
-	m_pBloom->RenderVerticalBlurToTexture();
-
-	SetRenderTarget();
-	UnbindPixelShaderResources();
-
 	// Combine the original scene with the blurred bright spots
-	m_pBloom->RenderBloomCombine();
-
-	UnbindPixelShaderResources();*/
+	SetRenderTarget();
+	m_pBloom->RenderBloomCombine(m_pPostProcessQuad, m_pOffScreenRenderer->GetOutputTexture());
 
 	// Present the back buffer to the front buffer
 	m_pSwapChain->Present(0,	// Sync interval (the presentation occurs immediately, there is no synchronization)

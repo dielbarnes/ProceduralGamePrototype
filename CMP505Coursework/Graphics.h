@@ -50,9 +50,8 @@ private:
 	ResourceManager *m_pResourceManager;
 	ShaderManager *m_pShaderManager;
 	OffScreenRenderer *m_pOffScreenRenderer;
-	Bloom *m_pBloom;
-
 	PostProcessQuad *m_pPostProcessQuad;
+	Bloom *m_pBloom;
 
 	HRESULT InitDirect3D(int iWindowWidth, int iWindowHeight, HWND hWindow);
 	void HandleKeyboardInput(float fDeltaTime);
