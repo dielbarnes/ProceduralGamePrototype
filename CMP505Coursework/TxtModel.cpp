@@ -212,10 +212,12 @@ XMFLOAT3 TxtModel::GetPointLightColor()
 {
 	return m_pointLightColor;
 }
+
 float TxtModel::GetPointLightStrength()
 {
 	return m_fPointLightStrength;
 }
+
 XMFLOAT3 TxtModel::GetPointLightPosition()
 {
 	return m_pointLightPosition;

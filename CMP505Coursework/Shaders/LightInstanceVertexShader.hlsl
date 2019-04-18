@@ -40,7 +40,9 @@ struct PS_INPUT
 	float4 position : SV_POSITION;
 	float2 texCoord : TEXCOORD0;
 	float3 normal : NORMAL;
-	float3 viewDirection : TEXCOORD1;
+    float3 viewDirection : TEXCOORD1;
+    float4 worldPos : WORLD_POSITION;
+    float3 meshPosition : MESH_POSITION;
 };
 
 // Entry point
@@ -54,7 +56,10 @@ PS_INPUT VS(VS_INPUT input)
 
 	// Calculate the position of the vertex in the world
 	float4 worldPosition = mul(input.position, input.worldMatrix);
-	output.position = worldPosition;
+    output.position = worldPosition;
+    output.worldPos = worldPosition;
+
+    output.meshPosition = float3(input.worldMatrix._41, input.worldMatrix._42, input.worldMatrix._43);
 
 	// Calculate the position of the vertex against the view and projection matrices
 	output.position = mul(output.position, viewMatrix);

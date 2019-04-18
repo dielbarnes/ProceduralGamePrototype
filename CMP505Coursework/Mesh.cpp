@@ -15,6 +15,10 @@ Mesh::Mesh(std::vector<ID3D11ShaderResourceView*> &textures, XMMATRIX transformM
 	m_textures = textures;
 	m_pVertexBuffer = nullptr;
 	m_pIndexBuffer = nullptr;
+	m_iIndexCount = 0;
+	m_pInstanceBuffer = nullptr;
+	m_iInstanceCount = 0;
+	m_worldMatrix = XMMatrixIdentity();
 	m_transformMatrix = transformMatrix;
 }
 
@@ -26,9 +30,11 @@ Mesh::~Mesh()
 	}
 	SAFE_RELEASE(m_pVertexBuffer);
 	SAFE_RELEASE(m_pIndexBuffer);
+	SAFE_RELEASE(m_pInstanceBuffer);
 }
 
-bool Mesh::InitializeBuffers(ID3D11Device *pDevice, std::vector<Vertex> &vertices, std::vector<DWORD> &indices)
+bool Mesh::InitializeBuffers(ID3D11Device *pDevice, std::vector<Vertex> &vertices, std::vector<DWORD> &indices, 
+							 int iInstanceCount, Instance *instances)
 {
 	int iVertexCount = vertices.size();
 	m_iIndexCount = indices.size();
@@ -65,6 +71,29 @@ bool Mesh::InitializeBuffers(ID3D11Device *pDevice, std::vector<Vertex> &vertice
 		return false;
 	}
 
+	m_iInstanceCount = iInstanceCount;
+
+	if (iInstanceCount > 1)
+	{
+		// Create the instance buffer
+
+		bufferDesc.ByteWidth = sizeof(Instance) * iInstanceCount;
+		bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+
+		for (int i = 0; i < iInstanceCount; i++)
+		{
+			instances[i].worldMatrix *= m_transformMatrix;
+		}
+		subresourceData.pSysMem = instances;
+
+		result = pDevice->CreateBuffer(&bufferDesc, &subresourceData, &m_pInstanceBuffer);
+		if (FAILED(result))
+		{
+			Utils::ShowError("Failed to create mesh instance buffer.", result);
+			return false;
+		}
+	}
+
 	return true;
 }
 
@@ -82,9 +111,19 @@ int Mesh::GetIndexCount()
 	return m_iIndexCount;
 }
 
-XMMATRIX Mesh::GetTransformMatrix()
+int Mesh::GetInstanceCount()
 {
-	return m_transformMatrix;
+	return m_iInstanceCount;
+}
+
+void Mesh::SetWorldMatrix(XMMATRIX worldMatrix)
+{
+	m_worldMatrix = worldMatrix;
+}
+
+XMMATRIX Mesh::GetWorldMatrix()
+{
+	return m_worldMatrix * m_transformMatrix;
 }
 
 #pragma endregion
@@ -95,14 +134,33 @@ void Mesh::Render(ID3D11DeviceContext *pImmediateContext)
 {
 	// Set the vertex and index buffers to active in the input assembler so they can be rendered (put them on the graphics pipeline)
 
-	UINT uiStrides = sizeof(Vertex);
-	UINT uiOffsets = 0;
+	if (m_iInstanceCount == 1)
+	{
+		UINT uiStrides = sizeof(Vertex);
+		UINT uiOffsets = 0;
 
-	pImmediateContext->IASetVertexBuffers(0,				// First input slot for binding
-										  1,				// Number of vertex buffers in the array
-										  &m_pVertexBuffer,
-										  &uiStrides,		// Size in bytes of the elements to be used from that vertex buffer (one stride for each vertex buffer in the array)
-										  &uiOffsets);		// Number of bytes between the first element of a vertex buffer and the first element that will be used (one offset for each vertex buffer in the array)
+		pImmediateContext->IASetVertexBuffers(0,				// First input slot for binding
+											  1,				// Number of vertex buffers in the array
+											  &m_pVertexBuffer,
+											  &uiStrides,		// Size in bytes of the elements to be used from that vertex buffer (one stride for each vertex buffer in the array)
+											  &uiOffsets);		// Number of bytes between the first element of a vertex buffer and the first element that will be used (one offset for each vertex buffer in the array)
+	}
+	else
+	{
+		UINT strides[2];
+		strides[0] = sizeof(Vertex);
+		strides[1] = sizeof(Instance);
+
+		UINT offsets[2];
+		offsets[0] = 0;
+		offsets[1] = 0;
+
+		ID3D11Buffer *bufferPointers[2];
+		bufferPointers[0] = m_pVertexBuffer;
+		bufferPointers[1] = m_pInstanceBuffer;
+
+		pImmediateContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
+	}
 
 	pImmediateContext->IASetIndexBuffer(m_pIndexBuffer,
 										DXGI_FORMAT_R32_UINT,	// 32-bit format that supports 32 bits for the red channel

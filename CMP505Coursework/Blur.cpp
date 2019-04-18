@@ -134,9 +134,9 @@ HRESULT Blur::Initialize(int iWindowWidth, int iWindowHeight)
 	// Create the texture sampler state
 	D3D11_SAMPLER_DESC samplerDesc;
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;	// Use linear interpolation for minification, magnification, and mip-level sampling
-	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;		// Tile the texture when resolving a u texture coordinate that is outside the 0 to 1 range
-	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;		
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 	samplerDesc.MipLODBias = 0.0f;							// Offset from the calculated mipmap level
 	samplerDesc.MaxAnisotropy = 1;
 	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;

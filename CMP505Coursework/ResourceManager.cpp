@@ -66,7 +66,7 @@ bool ResourceManager::LoadResources()
 	XMMATRIX groundScalingMatrix = XMMatrixScaling(0.28f, 0.28f, 0.28f);
 	m_txtModels[TxtModelResource::GroundModel]->TransformWorldMatrix(groundTranslationMatrix, XMMatrixIdentity(), groundScalingMatrix);
 
-	// Sky Dome
+	// Sky dome
 
 	if (!LoadTxtModel(TxtModelResource::SkyDomeModel))
 	{
@@ -84,13 +84,26 @@ bool ResourceManager::LoadResources()
 		return false;
 	}
 
-	// Crystal Post
+	// Crystal post
 
-	if (!LoadModel(ModelResource::CrystalPostModel))
+	int iCrystalPostCount = 2;
+	Instance *crystalPostInstances = new Instance[iCrystalPostCount];
+	crystalPostInstances[0].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-3.0f, 0.0f, 0.0f));
+	crystalPostInstances[1].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(3.0f, 0.0f, 0.0f));
+	if (!LoadModel(ModelResource::CrystalPostModel, iCrystalPostCount, crystalPostInstances))
 	{
 		MessageBox(0, "Failed to load crystal post model.", "", 0);
 		return false;
 	}
+
+	// Crystal fence
+	if (!LoadModel(ModelResource::CrystalFenceModel, 1))
+	{
+		MessageBox(0, "Failed to load crystal fence model.", "", 0);
+		return false;
+	}
+	m_models[ModelResource::CrystalFenceModel]->SetWorldMatrix(XMMatrixTranslation(0.0f, 3.0f, 0.0f));
+	m_models[ModelResource::CrystalFenceModel]->SetPointLightPosition(XMFLOAT3(0.0f, 1.0f, 0.0f));
 
 	return true;
 }
@@ -218,7 +231,7 @@ bool ResourceManager::LoadTxtModel(TxtModelResource resource)
 	return true;
 }
 
-bool ResourceManager::LoadModel(ModelResource resource)
+bool ResourceManager::LoadModel(ModelResource resource, int iInstanceCount, Instance *instances)
 {
 	std::string strFilePath = "";
 	switch (resource)
@@ -232,7 +245,7 @@ bool ResourceManager::LoadModel(ModelResource resource)
 	}
 
 	Model *pModel = new Model(m_pDevice, m_pImmediateContext, m_pDefaultTexture);
-	if (!pModel->Initialize(strFilePath))
+	if (!pModel->Initialize(strFilePath, iInstanceCount, instances))
 	{
 		return false;
 	}

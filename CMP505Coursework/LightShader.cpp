@@ -269,14 +269,14 @@ bool LightShader::Render(TxtModel *pModel, Camera *pCamera)
 
 bool LightShader::PreRender(Model *pModel, Camera *pCamera)
 {
-	return PreRender(1, XMINT2(1, 1), pModel->GetAmbientColor(), pModel->GetDiffuseColor(), pModel->GetSpecularColor(), 
+	return PreRender(pModel->GetInstanceCount(), XMINT2(1, 1), pModel->GetAmbientColor(), pModel->GetDiffuseColor(), pModel->GetSpecularColor(),
 					 pModel->GetSpecularPower(), pModel->GetLightDirection(), pModel->GetPointLightColor(), pModel->GetPointLightStrength(),
 					 pModel->GetPointLightPosition(), pCamera);
 }
 
 void LightShader::Render(Mesh *pMesh, Camera *pCamera)
 {
-	Render(1, pMesh->GetTransformMatrix(), pMesh->GetTextures(), pMesh->GetIndexCount(), pCamera);
+	Render(pMesh->GetInstanceCount(), pMesh->GetWorldMatrix(), pMesh->GetTextures(), pMesh->GetIndexCount(), pCamera);
 }
 
 void LightShader::Render(int iInstanceCount, XMMATRIX worldMatrix, std::vector<ID3D11ShaderResourceView*> textures, 
@@ -297,7 +297,7 @@ void LightShader::Render(int iInstanceCount, XMMATRIX worldMatrix, std::vector<I
 	}
 	else
 	{
-		m_pImmediateContext->DrawInstanced(iIndexCount, iInstanceCount, 0, 0);
+		m_pImmediateContext->DrawIndexedInstanced(iIndexCount, iInstanceCount, 0, 0, 0);
 	}
 }
 

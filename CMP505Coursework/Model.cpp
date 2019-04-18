@@ -15,6 +15,7 @@ Model::Model(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext, ID3D
 	m_pDevice = pDevice;
 	m_pImmediateContext = pImmediateContext;
 	m_pDefaultTexture = pDefaultTexture;
+	m_iInstanceCount = 0;
 	m_ambientColor = COLOR_XMF4(51.0f, 51.0f, 51.0f, 1.0f); // Ambient should not be too bright otherwise the scene will appear overexposed and washed-out
 	m_diffuseColor = COLOR_XMF4(180.0f, 100.0f, 255.0f, 1.0f);
 
@@ -35,7 +36,7 @@ Model::~Model()
 {
 }
 
-bool Model::Initialize(std::string strFilePath)
+bool Model::Initialize(std::string strFilePath, int iInstanceCount, Instance *instances)
 {
 	m_strDirectory = Utils::GetDirectoryFromPath(strFilePath);
 
@@ -46,29 +47,31 @@ bool Model::Initialize(std::string strFilePath)
 		return false;
 	}
 
-	ProcessNode(pScene->mRootNode, pScene, XMMatrixIdentity());
+	ProcessNode(pScene->mRootNode, pScene, XMMatrixIdentity(), iInstanceCount, instances);
+
+	m_iInstanceCount = iInstanceCount;
 
 	return true;
 }
 
-void Model::ProcessNode(aiNode *pNode, const aiScene *pScene, XMMATRIX parentTransformMatrix)
+void Model::ProcessNode(aiNode *pNode, const aiScene *pScene, XMMATRIX parentTransformMatrix, int iInstanceCount, Instance *instances)
 {
 	XMMATRIX nodeTransformMatrix = XMMatrixTranspose(XMMATRIX(&pNode->mTransformation.a1)) * parentTransformMatrix;
 
 	for (UINT i = 0; i < pNode->mNumMeshes; i++)
 	{
 		aiMesh *pAiMesh = pScene->mMeshes[pNode->mMeshes[i]];
-		Mesh *pMesh = ProcessMesh(pAiMesh, pScene, nodeTransformMatrix);
+		Mesh *pMesh = ProcessMesh(pAiMesh, pScene, nodeTransformMatrix, iInstanceCount, instances);
 		m_meshes.push_back(pMesh);
 	}
 
 	for (UINT i = 0; i < pNode->mNumChildren; i++)
 	{
-		ProcessNode(pNode->mChildren[i], pScene, nodeTransformMatrix);
+		ProcessNode(pNode->mChildren[i], pScene, nodeTransformMatrix, iInstanceCount, instances);
 	}
 }
 
-Mesh* Model::ProcessMesh(aiMesh *pAiMesh, const aiScene *pScene, XMMATRIX transformMatrix)
+Mesh* Model::ProcessMesh(aiMesh *pAiMesh, const aiScene *pScene, XMMATRIX transformMatrix, int iInstanceCount, Instance *instances)
 {
 	// Get vertices
 	std::vector<Vertex> vertices;
@@ -111,7 +114,7 @@ Mesh* Model::ProcessMesh(aiMesh *pAiMesh, const aiScene *pScene, XMMATRIX transf
 	
 	// Create mesh
 	Mesh *pMesh = new Mesh(textures, transformMatrix);
-	if (!pMesh->InitializeBuffers(m_pDevice, vertices, indices))
+	if (!pMesh->InitializeBuffers(m_pDevice, vertices, indices, iInstanceCount, instances))
 	{
 		MessageBox(0, "Failed to initialize mesh vertex and index buffers.", "", 0);
 	}
@@ -262,6 +265,19 @@ std::vector<Mesh*> Model::GetMeshes()
 	return m_meshes;
 }
 
+int Model::GetInstanceCount()
+{
+	return m_iInstanceCount;
+}
+
+void Model::SetWorldMatrix(XMMATRIX worldMatrix)
+{
+	for (auto mesh : m_meshes)
+	{
+		mesh->SetWorldMatrix(worldMatrix);
+	}
+}
+
 XMFLOAT4 Model::GetAmbientColor()
 {
 	return m_ambientColor;
@@ -291,10 +307,17 @@ XMFLOAT3 Model::GetPointLightColor()
 {
 	return m_pointLightColor;
 }
+
 float Model::GetPointLightStrength()
 {
 	return m_fPointLightStrength;
 }
+
+void Model::SetPointLightPosition(XMFLOAT3 position)
+{
+	m_pointLightPosition = position;
+}
+
 XMFLOAT3 Model::GetPointLightPosition()
 {
 	return m_pointLightPosition;

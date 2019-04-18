@@ -35,6 +35,7 @@ struct PS_INPUT
 	float3 normal : NORMAL;
 	float3 viewDirection : TEXCOORD1;
     float4 worldPos : WORLD_POSITION;
+    float3 meshPosition : MESH_POSITION;
 };
 
 // Entry point
@@ -79,7 +80,7 @@ float4 PS(PS_INPUT input) : SV_TARGET
     float dynamicLightAttenuation_b = 0.1f;
     float dynamicLightAttenuation_c = 0.1f;
     
-    float distanceToLight = distance(pointLightPosition, input.worldPos.xyz);
+    float distanceToLight = distance(input.meshPosition + pointLightPosition, input.worldPos.xyz);
     float attenuationFactor = 1 / (dynamicLightAttenuation_a + dynamicLightAttenuation_b * distanceToLight + dynamicLightAttenuation_c * pow(distanceToLight, 2));
     float3 diffuseLight = attenuationFactor * pointLightStrength * pointLightColor;
     outputColor += float4(diffuseLight, 1.0f);

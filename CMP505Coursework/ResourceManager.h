@@ -55,5 +55,5 @@ private:
 
 	HRESULT LoadDdsTexture(DdsTextureResource resource);
 	bool LoadTxtModel(TxtModelResource resource);
-	bool LoadModel(ModelResource resource);
+	bool LoadModel(ModelResource resource, int iInstanceCount, Instance *instances = nullptr);
 };

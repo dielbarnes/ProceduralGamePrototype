@@ -26,6 +26,8 @@ public:
 	~Model();
 
 	std::vector<Mesh*> GetMeshes();
+	int GetInstanceCount();
+	void SetWorldMatrix(XMMATRIX worldMatrix);
 	XMFLOAT4 GetAmbientColor();
 	XMFLOAT4 GetDiffuseColor();
 	XMFLOAT4 GetSpecularColor();
@@ -33,9 +35,10 @@ public:
 	XMFLOAT3 GetLightDirection();
 	XMFLOAT3 GetPointLightColor();
 	float GetPointLightStrength();
+	void SetPointLightPosition(XMFLOAT3 position);
 	XMFLOAT3 GetPointLightPosition();
 
-	bool Initialize(std::string strFilePath);
+	bool Initialize(std::string strFilePath, int iInstanceCount, Instance *instances = nullptr);
 	static HRESULT Create1x1ColorTexture(ID3D11Device *pDevice, unsigned char color[4], ID3D11ShaderResourceView **pTexture);
 
 private:
@@ -44,6 +47,7 @@ private:
 	ID3D11ShaderResourceView *m_pDefaultTexture;
 	std::string m_strDirectory;
 	std::vector<Mesh*> m_meshes;
+	int m_iInstanceCount;
 	XMFLOAT4 m_ambientColor;
 	XMFLOAT4 m_diffuseColor;
 	XMFLOAT4 m_specularColor;
@@ -53,8 +57,8 @@ private:
 	float m_fPointLightStrength;
 	XMFLOAT3 m_pointLightPosition;
 
-	void ProcessNode(aiNode *pNode, const aiScene *pScene, XMMATRIX parentTransformMatrix);
-	Mesh* ProcessMesh(aiMesh *pMesh, const aiScene *pScene, XMMATRIX transformMatrix);
+	void ProcessNode(aiNode *pNode, const aiScene *pScene, XMMATRIX parentTransformMatrix, int iInstanceCount, Instance *instances = nullptr);
+	Mesh* ProcessMesh(aiMesh *pMesh, const aiScene *pScene, XMMATRIX transformMatrix, int iInstanceCount, Instance *instances = nullptr);
 	std::vector<ID3D11ShaderResourceView*> LoadMaterialTextures(aiMaterial *pMaterial, aiTextureType textureType, const aiScene *pScene);
 	void LoadEmbeddedTexture(const uint8_t *pData, size_t size, ID3D11ShaderResourceView *pTexture);
 	void LoadDiskTexture(std::string strFilePath, ID3D11ShaderResourceView **pTexture);

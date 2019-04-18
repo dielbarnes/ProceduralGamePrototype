@@ -24,9 +24,12 @@ public:
 
 	std::vector<ID3D11ShaderResourceView*> GetTextures();
 	int GetIndexCount();
-	XMMATRIX GetTransformMatrix();
+	int GetInstanceCount();
+	void SetWorldMatrix(XMMATRIX worldMatrix);
+	XMMATRIX GetWorldMatrix();
 
-	bool InitializeBuffers(ID3D11Device *pDevice, std::vector<Vertex> &vertices, std::vector<DWORD> &indices);
+	bool InitializeBuffers(ID3D11Device *pDevice, std::vector<Vertex> &vertices, std::vector<DWORD> &indices, 
+						   int iInstanceCount, Instance *instances = nullptr);
 	void Render(ID3D11DeviceContext *pImmediateContext);
 
 private:
@@ -34,5 +37,8 @@ private:
 	ID3D11Buffer *m_pVertexBuffer;
 	ID3D11Buffer *m_pIndexBuffer;
 	int m_iIndexCount;
+	ID3D11Buffer *m_pInstanceBuffer;
+	int m_iInstanceCount;
+	XMMATRIX m_worldMatrix;
 	XMMATRIX m_transformMatrix;
 };
