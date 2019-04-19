@@ -19,13 +19,15 @@ cbuffer MatrixBuffer
 
 struct VS_INPUT
 {
-	float4 position : POSITION;
+    float4 position : POSITION;
+    float2 texCoord : TEXCOORD0;
 };
 
 struct PS_INPUT
 {
 	float4 position : SV_POSITION;
-	float4 domePosition : TEXCOORD0;
+    float2 texCoord : TEXCOORD0;
+    float4 domePosition : DOME_POSITION;
 };
 
 // Entry point
@@ -41,6 +43,9 @@ PS_INPUT VS(VS_INPUT input)
 	output.position = mul(input.position, worldMatrix);
 	output.position = mul(output.position, viewMatrix);
 	output.position = mul(output.position, projectionMatrix).xyww;
+
+	// Store the texture coordinates for the pixel shader
+    output.texCoord = input.texCoord;
 
 	// Store the dome position for the pixel shader
 	output.domePosition = input.position;

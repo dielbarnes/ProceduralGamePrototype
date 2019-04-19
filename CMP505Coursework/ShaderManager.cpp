@@ -56,9 +56,9 @@ bool ShaderManager::RenderModel(TxtModel* pModel, Camera* pCamera)
 	return m_pLightShader->Render(pModel, pCamera);
 }
 
-bool ShaderManager::RenderSkyDome(SkyDome *pSkyDome, Camera* pCamera)
+bool ShaderManager::RenderSkyDome(SkyDome *pSkyDome, Camera* pCamera, float fTime)
 {
-	return m_pSkyDomeShader->Render(pSkyDome, pCamera);
+	return m_pSkyDomeShader->Render(pSkyDome, pCamera, fTime);
 }
 
 #pragma endregion

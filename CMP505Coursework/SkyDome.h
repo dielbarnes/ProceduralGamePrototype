@@ -13,6 +13,7 @@
 struct SkyDomeVertex
 {
 	XMFLOAT3 position;
+	XMFLOAT2 textureCoordinates;
 };
 
 class SkyDome

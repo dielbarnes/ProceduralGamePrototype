@@ -27,6 +27,7 @@ Graphics::Graphics()
 	m_pOffScreenRenderer = nullptr;
 	m_pPostProcessQuad = nullptr;
 	m_pBloom = nullptr;
+	fTotalTime = 0.0f;
 }
 
 Graphics::~Graphics()
@@ -417,6 +418,8 @@ void Graphics::OnMouseMove(WPARAM buttonState, int x, int y)
 
 bool Graphics::Render(const float fDeltaTime)
 {
+	fTotalTime += fDeltaTime;
+
 	HandleKeyboardInput(fDeltaTime);
 	m_pCamera->Update();
 
@@ -464,7 +467,7 @@ bool Graphics::Render(const float fDeltaTime)
 
 	// Render sky dome
 	m_pResourceManager->RenderModel(TxtModelResource::SkyDomeModel);
-	if (!m_pShaderManager->RenderSkyDome(m_pResourceManager->GetSkyDome(), m_pCamera))
+	if (!m_pShaderManager->RenderSkyDome(m_pResourceManager->GetSkyDome(), m_pCamera, fTotalTime))
 	{
 		return false;
 	}

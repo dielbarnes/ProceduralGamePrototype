@@ -18,7 +18,7 @@ public:
 
 	HRESULT InitializeShaders();
 	bool RenderModel(TxtModel *pModel, Camera *pCamera);
-	bool RenderSkyDome(SkyDome *pSkyDome, Camera *pCamera);
+	bool RenderSkyDome(SkyDome *pSkyDome, Camera *pCamera, float fTime);
 
 private:
 	LightShader *m_pLightShader;

@@ -34,6 +34,7 @@ bool SkyDome::InitializeBuffers(ID3D11Device *pDevice)
 	for (int i = 0; i < m_iVertexCount; i++)
 	{
 		vertices[i].position = XMFLOAT3(m_vertexData[i].x, m_vertexData[i].y, m_vertexData[i].z);
+		vertices[i].textureCoordinates = XMFLOAT2(m_vertexData[i].tu, m_vertexData[i].tv);
 
 		indices[i] = i;
 	}

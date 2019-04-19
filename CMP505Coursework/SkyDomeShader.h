@@ -17,6 +17,8 @@ struct SkyColorBuffer // For pixel shader
 	XMFLOAT4 topColor;
 	XMFLOAT4 centerColor;
 	XMFLOAT4 bottomColor;
+	float time;
+	XMFLOAT3 padding;
 };
 
 class SkyDomeShader : public Shader
@@ -26,7 +28,7 @@ public:
 	~SkyDomeShader();
 
 	HRESULT Initialize();
-	bool Render(SkyDome *pSkyDome, Camera *pCamera);
+	bool Render(SkyDome *pSkyDome, Camera *pCamera, float fTime);
 
 private:
 	ID3D11Buffer *m_pColorBuffer;

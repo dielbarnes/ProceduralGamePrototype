@@ -54,7 +54,7 @@ bool ResourceManager::LoadResources()
 	}
 
 	m_txtModels[TxtModelResource::GroundModel]->SetTexture(m_ddsTextures[DdsTextureResource::GroundTexture]);
-	m_txtModels[TxtModelResource::GroundModel]->SetTextureTileCount(4, 4);
+	m_txtModels[TxtModelResource::GroundModel]->SetTextureTileCount(3, 3);
 
 	if (!m_txtModels[TxtModelResource::GroundModel]->InitializeBuffers(m_pDevice, 1))
 	{
@@ -62,8 +62,8 @@ bool ResourceManager::LoadResources()
 		return false;
 	}
 
-	XMMATRIX groundTranslationMatrix = XMMatrixTranslation(0.0f, 0.0f, 0.0f);
-	XMMATRIX groundScalingMatrix = XMMatrixScaling(0.28f, 0.28f, 0.28f);
+	XMMATRIX groundTranslationMatrix = XMMatrixTranslation(0.4f, 0.0f, 0.0f);
+	XMMATRIX groundScalingMatrix = XMMatrixScaling(0.22f, 0.22f, 0.22f);
 	m_txtModels[TxtModelResource::GroundModel]->TransformWorldMatrix(groundTranslationMatrix, XMMatrixIdentity(), groundScalingMatrix);
 
 	// Sky dome
@@ -86,10 +86,18 @@ bool ResourceManager::LoadResources()
 
 	// Crystal post
 
-	int iCrystalPostCount = 2;
+	// Distance between 2 posts: 6.55f (3 fences between)
+	// 1.0f post z-movement = 1.1f fence z-movement
+
+	int iCrystalPostCount = 4;
 	Instance *crystalPostInstances = new Instance[iCrystalPostCount];
-	crystalPostInstances[0].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-3.0f, 0.0f, 0.0f));
-	crystalPostInstances[1].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(3.0f, 0.0f, 0.0f));
+	XMMATRIX crystalPostScalingMatrix = XMMatrixScaling(1.1f, 1.1f, 1.1f);
+	// Back
+	crystalPostInstances[0].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-3.2f, 0.0f, 3.3f) * crystalPostScalingMatrix);
+	crystalPostInstances[1].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(3.35f, 0.0f, 3.3f) * crystalPostScalingMatrix);
+	// Front
+	crystalPostInstances[2].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-3.2f, 0.0f, -3.25f) * crystalPostScalingMatrix);
+	crystalPostInstances[3].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(3.35f, 0.0f, -3.25f) * crystalPostScalingMatrix);
 	if (!LoadModel(ModelResource::CrystalPostModel, iCrystalPostCount, crystalPostInstances))
 	{
 		MessageBox(0, "Failed to load crystal post model.", "", 0);
@@ -98,13 +106,33 @@ bool ResourceManager::LoadResources()
 
 	// Crystal fence
 
-	if (!LoadModel(ModelResource::CrystalFenceModel, 1))
+	// Distance between 2 fences: 2.5f
+
+	int iCrystalFenceCount = 12;
+	Instance *crystalFenceInstances = new Instance[iCrystalFenceCount];
+	// Back
+	crystalFenceInstances[0].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f, 0.5f, 3.63f));
+	crystalFenceInstances[1].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.5f, 3.63f));
+	crystalFenceInstances[2].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f, 0.5f, 3.63f));
+	// Front
+	crystalFenceInstances[3].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f, 0.5f, -3.575f));
+	crystalFenceInstances[4].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.5f, -3.575f));
+	crystalFenceInstances[5].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f, 0.5f, -3.575f));
+	// Left
+	XMMATRIX crystalFenceRotationMatrix = XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 0.5f, XM_PI * 0.0f);
+	crystalFenceInstances[6].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f - 0.11f, 0.5f, -3.575f + 0.05f) * crystalFenceRotationMatrix);
+	crystalFenceInstances[7].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f - 0.11f, 0.5f, -3.575f + 0.05f) * crystalFenceRotationMatrix);
+	crystalFenceInstances[8].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f - 0.11f, 0.5f, -3.575f + 0.05f) * crystalFenceRotationMatrix);
+	// Right
+	crystalFenceInstances[9].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f - 0.11f, 0.5f, 3.63f + 0.05f) * crystalFenceRotationMatrix);
+	crystalFenceInstances[10].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f - 0.11f, 0.5f, 3.63f + 0.05f) * crystalFenceRotationMatrix);
+	crystalFenceInstances[11].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f - 0.11f, 0.5f, 3.63f + 0.05f) * crystalFenceRotationMatrix);
+	if (!LoadModel(ModelResource::CrystalFenceModel, iCrystalFenceCount, crystalFenceInstances))
 	{
 		MessageBox(0, "Failed to load crystal fence model.", "", 0);
 		return false;
 	}
 
-	m_models[ModelResource::CrystalFenceModel]->SetWorldMatrix(XMMatrixTranslation(0.0f, 3.0f, 0.0f));
 	m_models[ModelResource::CrystalFenceModel]->SetPointLightPosition(XMFLOAT3(0.0f, 1.0f, 0.0f));
 
 	return true;

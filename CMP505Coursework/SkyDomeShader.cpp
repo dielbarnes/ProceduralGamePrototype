@@ -37,7 +37,8 @@ HRESULT SkyDomeShader::Initialize()
 		  0,							// Input slot (index of vertex buffer the GPU should fetch ranging form 0 to 15)
 		  0,							// Offset in bytes between each element (tells the GPU the memory location to start fetching the data for this element); D3D11_APPEND_ALIGNED_ELEMENT defines the current element directly after the previous one
 		  D3D11_INPUT_PER_VERTEX_DATA,  // Input classification
-		  0 }							// Number of instances to draw using the same per-instance data before advancing in the buffer by one element (must be 0 for an element that contains per-vertex data)
+		  0 },							// Number of instances to draw using the same per-instance data before advancing in the buffer by one element (must be 0 for an element that contains per-vertex data)
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
 	UINT uiElementCount = ARRAYSIZE(vertexInputDesc);
@@ -69,7 +70,7 @@ HRESULT SkyDomeShader::Initialize()
 
 #pragma region Render
 
-bool SkyDomeShader::Render(SkyDome *pSkyDome, Camera *pCamera)
+bool SkyDomeShader::Render(SkyDome *pSkyDome, Camera *pCamera, float fTime)
 {
 	// Set the vertex input layout
 	m_pImmediateContext->IASetInputLayout(m_pVertexInputLayout);
@@ -100,6 +101,8 @@ bool SkyDomeShader::Render(SkyDome *pSkyDome, Camera *pCamera)
 	pColorBufferData->topColor = pSkyDome->GetTopColor();
 	pColorBufferData->centerColor = pSkyDome->GetCenterColor();
 	pColorBufferData->bottomColor = pSkyDome->GetBottomColor();
+	pColorBufferData->time = fTime;
+	pColorBufferData->padding = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	// Unlock the color buffer
 	m_pImmediateContext->Unmap(m_pColorBuffer, 0);
