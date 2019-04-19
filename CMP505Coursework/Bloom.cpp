@@ -248,7 +248,7 @@ bool Bloom::RenderBloomExtractToTexture(PostProcessQuad *pQuad, ID3D11ShaderReso
 	BloomExtractBuffer *pExtractBufferData = (BloomExtractBuffer*)mappedResource.pData;
 
 	// Copy the bloom threshold into the extract buffer
-	pExtractBufferData->threshold = 0.35f;
+	pExtractBufferData->threshold = 0.5f;
 	pExtractBufferData->padding = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	// Unlock the extract buffer

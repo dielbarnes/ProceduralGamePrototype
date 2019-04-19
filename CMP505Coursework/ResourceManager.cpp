@@ -97,11 +97,13 @@ bool ResourceManager::LoadResources()
 	}
 
 	// Crystal fence
+
 	if (!LoadModel(ModelResource::CrystalFenceModel, 1))
 	{
 		MessageBox(0, "Failed to load crystal fence model.", "", 0);
 		return false;
 	}
+
 	m_models[ModelResource::CrystalFenceModel]->SetWorldMatrix(XMMatrixTranslation(0.0f, 3.0f, 0.0f));
 	m_models[ModelResource::CrystalFenceModel]->SetPointLightPosition(XMFLOAT3(0.0f, 1.0f, 0.0f));
 

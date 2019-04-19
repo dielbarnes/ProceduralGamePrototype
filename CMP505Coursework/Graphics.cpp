@@ -510,6 +510,8 @@ bool Graphics::Render(const float fDeltaTime)
 	m_pSwapChain->Present(0,	// Sync interval (the presentation occurs immediately, there is no synchronization)
 						  0);	// Swap chain presentation options (present a frame from each buffer starting with the current buffer to the output)
 
+	UnbindPixelShaderResources();
+
 	return true;
 }
 
