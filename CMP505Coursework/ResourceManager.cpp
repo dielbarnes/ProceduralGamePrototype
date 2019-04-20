@@ -53,18 +53,15 @@ bool ResourceManager::LoadResources()
 		return false;
 	}
 
-	m_txtModels[TxtModelResource::GroundModel]->SetTexture(m_ddsTextures[DdsTextureResource::GroundTexture]);
-	m_txtModels[TxtModelResource::GroundModel]->SetTextureTileCount(3, 3);
-
 	if (!m_txtModels[TxtModelResource::GroundModel]->InitializeBuffers(m_pDevice, 1))
 	{
 		MessageBox(0, "Failed to initialize ground vertex and index buffers.", "", 0);
 		return false;
 	}
 
-	XMMATRIX groundTranslationMatrix = XMMatrixTranslation(0.4f, 0.0f, 0.0f);
-	XMMATRIX groundScalingMatrix = XMMatrixScaling(0.22f, 0.22f, 0.22f);
-	m_txtModels[TxtModelResource::GroundModel]->TransformWorldMatrix(groundTranslationMatrix, XMMatrixIdentity(), groundScalingMatrix);
+	m_txtModels[TxtModelResource::GroundModel]->TransformWorldMatrix(XMMatrixTranslation(0.4f, 0.0f, 0.0f), XMMatrixIdentity(), XMMatrixScaling(0.22f, 0.22f, 0.22f));
+	m_txtModels[TxtModelResource::GroundModel]->SetTextureTileCount(3, 3);
+	m_txtModels[TxtModelResource::GroundModel]->SetTexture(m_ddsTextures[DdsTextureResource::GroundTexture]);
 
 	// Sky dome
 
@@ -74,15 +71,15 @@ bool ResourceManager::LoadResources()
 		return false;
 	}
 
-	m_pSkyDome->SetTopColor(COLOR_XMF4(17.0f, 0.0f, 50.0f, 1.0f));
-	m_pSkyDome->SetCenterColor(COLOR_XMF4(10.0f, 0.0f, 30.0f, 1.0f));
-	m_pSkyDome->SetBottomColor(COLOR_XMF4(7.0f, 0.0f, 20.0f, 1.0f));
-
 	if (!m_pSkyDome->InitializeBuffers(m_pDevice))
 	{
 		MessageBox(0, "Failed to initialize sky dome vertex and index buffers.", "", 0);
 		return false;
 	}
+
+	m_pSkyDome->SetTopColor(COLOR_XMF4(17.0f, 0.0f, 50.0f, 1.0f));
+	m_pSkyDome->SetCenterColor(COLOR_XMF4(10.0f, 0.0f, 30.0f, 1.0f));
+	m_pSkyDome->SetBottomColor(COLOR_XMF4(7.0f, 0.0f, 20.0f, 1.0f));
 
 	// Crystal post
 
@@ -98,6 +95,11 @@ bool ResourceManager::LoadResources()
 	// Front
 	crystalPostInstances[2].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-3.2f, 0.0f, -3.25f) * crystalPostScalingMatrix);
 	crystalPostInstances[3].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(3.35f, 0.0f, -3.25f) * crystalPostScalingMatrix);
+	for (int i = 0; i < iCrystalPostCount; i++)
+	{
+		crystalPostInstances[i].textureTileCount = XMINT2(1, 1);
+		crystalPostInstances[i].lightDirection = DEFAULT_LIGHT_DIRECTION;
+	}
 	if (!LoadModel(ModelResource::CrystalPostModel, iCrystalPostCount, crystalPostInstances))
 	{
 		MessageBox(0, "Failed to load crystal post model.", "", 0);
@@ -110,6 +112,7 @@ bool ResourceManager::LoadResources()
 
 	int iCrystalFenceCount = 12;
 	Instance *crystalFenceInstances = new Instance[iCrystalFenceCount];
+	XMMATRIX crystalFenceRotationMatrix = XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 0.5f, XM_PI * 0.0f);
 	// Back
 	crystalFenceInstances[0].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f, 0.5f, 3.63f));
 	crystalFenceInstances[1].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.5f, 3.63f));
@@ -119,7 +122,6 @@ bool ResourceManager::LoadResources()
 	crystalFenceInstances[4].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.5f, -3.575f));
 	crystalFenceInstances[5].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f, 0.5f, -3.575f));
 	// Left
-	XMMATRIX crystalFenceRotationMatrix = XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 0.5f, XM_PI * 0.0f);
 	crystalFenceInstances[6].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f - 0.11f, 0.5f, -3.575f + 0.05f) * crystalFenceRotationMatrix);
 	crystalFenceInstances[7].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f - 0.11f, 0.5f, -3.575f + 0.05f) * crystalFenceRotationMatrix);
 	crystalFenceInstances[8].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f - 0.11f, 0.5f, -3.575f + 0.05f) * crystalFenceRotationMatrix);
@@ -127,6 +129,11 @@ bool ResourceManager::LoadResources()
 	crystalFenceInstances[9].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f - 0.11f, 0.5f, 3.63f + 0.05f) * crystalFenceRotationMatrix);
 	crystalFenceInstances[10].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f - 0.11f, 0.5f, 3.63f + 0.05f) * crystalFenceRotationMatrix);
 	crystalFenceInstances[11].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f - 0.11f, 0.5f, 3.63f + 0.05f) * crystalFenceRotationMatrix);
+	for (int i = 0; i < iCrystalFenceCount; i++)
+	{
+		crystalFenceInstances[i].textureTileCount = XMINT2(1, 1);
+		crystalFenceInstances[i].lightDirection = DEFAULT_LIGHT_DIRECTION;
+	}
 	if (!LoadModel(ModelResource::CrystalFenceModel, iCrystalFenceCount, crystalFenceInstances))
 	{
 		MessageBox(0, "Failed to load crystal fence model.", "", 0);
@@ -134,6 +141,23 @@ bool ResourceManager::LoadResources()
 	}
 
 	m_models[ModelResource::CrystalFenceModel]->SetPointLightPosition(XMFLOAT3(0.0f, 1.0f, 0.0f));
+
+	// Clock
+
+	int iClockCount = 2;
+	Instance *clockInstances = new Instance[iClockCount];
+	clockInstances[0].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 1.0f, -1.0f) * XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 1.0f, XM_PI * 0.0f) * XMMatrixScaling(5.0f, 5.0f, 5.0f));
+	clockInstances[1].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, -0.2f) * XMMatrixRotationRollPitchYaw(XM_PI * -0.5f, XM_PI * 1.0f, XM_PI * 0.0f) * XMMatrixScaling(12.0f, 12.0f, 12.0f));
+	for (int i = 0; i < iClockCount; i++)
+	{
+		clockInstances[i].textureTileCount = XMINT2(1, 1);
+		clockInstances[i].lightDirection = DEFAULT_LIGHT_DIRECTION;
+	}
+	if (!LoadModel(ModelResource::ClockModel, iClockCount, clockInstances))
+	{
+		MessageBox(0, "Failed to load clock model.", "", 0);
+		return false;
+	}
 
 	return true;
 }
@@ -271,6 +295,9 @@ bool ResourceManager::LoadModel(ModelResource resource, int iInstanceCount, Inst
 		break;
 	case CrystalFenceModel:
 		strFilePath = "Resources/crystal_fence.obj";
+		break;
+	case ClockModel:
+		strFilePath = "Resources/clock.obj";
 		break;
 	}
 

@@ -46,35 +46,32 @@ float2 RandFloat2(float2 p)
     return float2(N2(p), N2(p.yx)) - 0.5f;
 }
 
-float2 GetCellStar(float2 cellID)
+float2 GetCellPoint(float2 cellId)
 {
-    float2 temp = RandFloat2(cellID);
-    return float2(temp.x, temp.y) * 0.8f;
+    float2 rand = RandFloat2(cellId);
+    return rand * 0.8f;
 }
 
-float4 CreateStarField(PS_INPUT input, float2 domeUV, float f)
+float4 CreateStarField(PS_INPUT input, float2 domeUv, float uvFactor)
 {
-    float2 uv = domeUV / 2.0f;
-	uv *= f;
+    float2 uv = domeUv / 2.0f;
+    uv *= uvFactor;
 
     float2 gridCell = floor(uv);
-    float2 gridCellPoint = GetCellStar(gridCell);
+    float2 gridCellPoint = GetCellPoint(gridCell);
     float2 gridOffset = frac(uv) - 0.5f;
-    float2 shrekt = gridOffset - gridCellPoint;
+    float2 rect = gridOffset - gridCellPoint;
 
-    float oldY = shrekt.y;   
-    shrekt.y += sign(shrekt.y) * sqrt(abs(shrekt.x));
-    shrekt.x += sign(shrekt.x) * sqrt(abs(oldY));
+    float oldY = rect.y;
+    rect.y += sign(rect.y) * sqrt(abs(rect.x));
+    rect.x += sign(rect.x) * sqrt(abs(oldY));
 
-    float dToAdj = length(shrekt) * (1.0f + sin(t * length(gridCell)) * 0.2f);
+    float dToAdj = length(rect) * (1.0f + sin(t * length(gridCell)) * 0.2f);
 	
     float s = smoothstep(0.15f, 0.1f, dToAdj);
-    float3 col = float3(s, s, s);
-
-    float3 inPosNorm = normalize(input.domePosition.xyz);
-    col = col * step(0, input.domePosition.y);
-
-    return float4(col, 1.0f);
+    float3 color = float3(s, s, s);
+    color = color * step(0, input.domePosition.y);
+    return float4(color, 1.0f);
 }
 
 // Entry point
@@ -95,8 +92,8 @@ float4 PS(PS_INPUT input) : SV_TARGET
     skyDomeColor = lerp(skyDomeColor, topColor, height / 2.0f);
 
 	// Create star fields
-    float3 starFieldColor1 = CreateStarField(input, input.domePosition.xy, 20.0f);
-    float4 outputColor = max(float4(starFieldColor1, 1.0f), skyDomeColor);
-    float3 starFieldColor2 = CreateStarField(input, input.domePosition.xz, 30.0f);
-    return max(float4(starFieldColor2, 1.0f), outputColor);
+    float4 starFieldColor1 = CreateStarField(input, input.domePosition.xy, 20.0f);
+    float4 outputColor = max(starFieldColor1, skyDomeColor);
+    float4 starFieldColor2 = CreateStarField(input, input.domePosition.xz, 30.0f);
+    return max(starFieldColor2, outputColor);
 }

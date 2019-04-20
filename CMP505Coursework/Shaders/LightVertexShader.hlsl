@@ -39,8 +39,9 @@ struct PS_INPUT
 	float2 texCoord : TEXCOORD0;
 	float3 normal : NORMAL;
 	float3 viewDirection : TEXCOORD1;
-    float4 worldPos : WORLD_POSITION;
+    float4 worldPosition : WORLD_POSITION;
     float3 meshPosition : MESH_POSITION;
+    float3 instanceLightDirection : LIGHT_DIR;
 };
 
 // Entry point
@@ -55,7 +56,7 @@ PS_INPUT VS(VS_INPUT input)
 	// Calculate the position of the vertex in the world
 	float4 worldPosition = mul(input.position, worldMatrix);
 	output.position = worldPosition;
-    output.worldPos = worldPosition;
+    output.worldPosition = worldPosition;
 
     output.meshPosition = float3(worldMatrix._41, worldMatrix._42, worldMatrix._43);
 
@@ -77,6 +78,9 @@ PS_INPUT VS(VS_INPUT input)
 
 	// Normalize the view direction
 	output.viewDirection = normalize(output.viewDirection);
+
+	// Initialize light direction for the pixel shader
+    output.instanceLightDirection = float3(0.0f, 0.0f, 0.0f);
 
 	return output;
 }

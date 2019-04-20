@@ -15,6 +15,8 @@
 #include <directxmath.h>
 #include "Utils.h"
 
+#define DEFAULT_LIGHT_DIRECTION XMFLOAT3(0.0f, -0.8f, 0.5f)
+
 using namespace DirectX;
 
 struct Vertex
@@ -43,6 +45,8 @@ struct VertexData
 struct Instance
 {
 	XMMATRIX worldMatrix;
+	XMINT2 textureTileCount;
+	XMFLOAT3 lightDirection;
 };
 
 class TxtModel

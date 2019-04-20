@@ -1,5 +1,2 @@
-﻿C:\Users\dielb\Desktop\CMP505Coursework\CMP505Coursework\Shaders\SkyDomePixelShader.hlsl(98,12-81): warning X3206: implicit truncation of vector type
-C:\Users\dielb\Desktop\CMP505Coursework\CMP505Coursework\Shaders\SkyDomePixelShader.hlsl(100,12-81): warning X3206: implicit truncation of vector type
-  
-  compilation object save succeeded; see C:\Users\dielb\Desktop\CMP505Coursework\x64\Debug\SkyDomePixelShader.cso
+﻿  compilation object save succeeded; see C:\Users\dielb\Desktop\CMP505Coursework\x64\Debug\LightVertexShader.cso
   CMP505Coursework.vcxproj -> C:\Users\dielb\Desktop\CMP505Coursework\x64\Debug\CMP505Coursework.exe

@@ -26,8 +26,9 @@ Model::Model(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext, ID3D
 	m_specularColor = COLOR_XMF4(10.0f, 10.0f, 10.0f, 1.0f);
 	m_fSpecularPower = 24.0f;
 
-	m_lightDirection = XMFLOAT3(0.0f, -0.8f, 0.5f);
+	m_lightDirection = DEFAULT_LIGHT_DIRECTION;
 	m_pointLightColor = XMFLOAT3(140.0f / 255.0f, 200.0f / 255.0f, 255.0f / 255.0f);
+	//m_pointLightColor = XMFLOAT3(0.0f / 255.0f, 255.0f / 255.0f, 0.0f / 255.0f);
 	m_fPointLightStrength = 0.5f;
 	m_pointLightPosition = XMFLOAT3(0.0f, 3.0f, 0.0f);
 }

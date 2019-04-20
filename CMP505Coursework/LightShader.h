@@ -32,7 +32,7 @@ struct LightPSBuffer // For pixel shader
 	XMFLOAT3 pointLightColor;
 	float pointLightStrength;
 	XMFLOAT3 pointLightPosition;
-	float padding;
+	UINT instanceCount;
 };
 
 class LightShader : public Shader

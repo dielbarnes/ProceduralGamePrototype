@@ -23,7 +23,7 @@ cbuffer LightPSBuffer
     float3 pointLightColor;
     float pointLightStrength;
     float3 pointLightPosition;
-    float padding;
+    uint instanceCount;
 };
 
 // Input
@@ -34,8 +34,9 @@ struct PS_INPUT
 	float2 texCoord : TEXCOORD0;
 	float3 normal : NORMAL;
 	float3 viewDirection : TEXCOORD1;
-    float4 worldPos : WORLD_POSITION;
+    float4 worldPosition : WORLD_POSITION;
     float3 meshPosition : MESH_POSITION;
+    float3 instanceLightDirection : LIGHT_DIR;
 };
 
 // Entry point
@@ -45,8 +46,14 @@ float4 PS(PS_INPUT input) : SV_TARGET
 	// Set the default output color to the ambient light value for all pixels
 	float4 outputColor = ambientColor;
 
+    float3 lightDir = lightDirection;
+    if (instanceCount > 1)
+    {
+        lightDir = input.instanceLightDirection;
+    }
+
 	// Invert the light direction and calculate the amount of light on this pixel
-	float lightIntensity = saturate(dot(input.normal, -lightDirection));
+    float lightIntensity = saturate(dot(input.normal, -lightDir));
 
 	// Initialize the specular light
 	float4 specular = float4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -57,7 +64,7 @@ float4 PS(PS_INPUT input) : SV_TARGET
 		outputColor += (diffuseColor * lightIntensity);
 
 		// Calculate the reflection vector
-		float3 reflection = normalize(2 * lightIntensity * input.normal - lightDirection);
+        float3 reflection = normalize(2 * lightIntensity * input.normal - lightDir);
 
 		// Determine the amount of specular light
 		specular = specularColor * pow(saturate(dot(reflection, input.viewDirection)), specularPower);
@@ -80,7 +87,7 @@ float4 PS(PS_INPUT input) : SV_TARGET
     float dynamicLightAttenuation_b = 0.1f;
     float dynamicLightAttenuation_c = 0.1f;
     
-    float distanceToLight = distance(input.meshPosition + pointLightPosition, input.worldPos.xyz);
+    float distanceToLight = distance(input.meshPosition + pointLightPosition, input.worldPosition.xyz);
     float attenuationFactor = 1 / (dynamicLightAttenuation_a + dynamicLightAttenuation_b * distanceToLight + dynamicLightAttenuation_c * pow(distanceToLight, 2));
     float3 diffuseLight = attenuationFactor * pointLightStrength * pointLightColor;
     outputColor += float4(diffuseLight, 1.0f);

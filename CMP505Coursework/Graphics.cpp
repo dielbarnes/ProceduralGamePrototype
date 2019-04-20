@@ -447,14 +447,6 @@ bool Graphics::Render(const float fDeltaTime)
 		return false;
 	}
 
-	/*// Turn on alpha blending with render target pre-blend operation
-	float blendFactor[4] = COLOR_F4(0.0f, 0.0f, 0.0f, 0.0f) // One blend factor for each RGBA component; modulates values for the pixel shader, render target, or both
-	UINT sampleMask = 0xffffffff; // Determines which samples get updated in all the active render targets
-	m_pImmediateContext->OMSetBlendState(m_pBlendStateInvSrcAlpha, blendFactor, sampleMask);
-
-	// Turn off alpha blending
-	m_pImmediateContext->OMSetBlendState(m_pBlendStateDisabled, blendFactor, sampleMask);*/
-
 	// Set the depth test comparison to LESS_EQUAL
 	m_pImmediateContext->OMSetDepthStencilState(m_pDepthStencilStateLessEqual, 1);
 
@@ -478,6 +470,19 @@ bool Graphics::Render(const float fDeltaTime)
 	// Turn on back face culling
 	m_pImmediateContext->RSSetState(m_pRasterizerStateDefault);
 
+	// Turn on alpha blending with render target pre-blend operation
+	float blendFactor[4] = COLOR_F4(0.0f, 0.0f, 0.0f, 0.0f) // One blend factor for each RGBA component; modulates values for the pixel shader, render target, or both
+	UINT sampleMask = 0xffffffff; // Determines which samples get updated in all the active render targets
+	m_pImmediateContext->OMSetBlendState(m_pBlendStateNoPreBlendOp, blendFactor, sampleMask);
+
+	if (!m_pResourceManager->RenderModel(ModelResource::ClockModel, m_pCamera, m_pShaderManager->GetLightShader()))
+	{
+		return false;
+	}
+
+	// Turn off alpha blending
+	m_pImmediateContext->OMSetBlendState(m_pBlendStateDisabled, blendFactor, sampleMask);
+
 	// For debugging only: save original scene texture as jpg
 	//m_pOffScreenRenderer->SaveTextureToFile();
 
@@ -488,7 +493,7 @@ bool Graphics::Render(const float fDeltaTime)
 	m_pBloom->RenderBloomExtractToTexture(m_pPostProcessQuad, m_pOffScreenRenderer->GetOutputTexture());
 	UnbindPixelShaderResources();
 	
-	// Blur the bright spots
+	// Blur the bright spots 3 times
 
 	m_pBloom->RenderHorizontalBlurToTexture(m_pPostProcessQuad, m_pBloom->GetExtractTexture());
 	UnbindPixelShaderResources();
