@@ -53,14 +53,23 @@ bool ResourceManager::LoadResources()
 		return false;
 	}
 
-	if (!m_txtModels[TxtModelResource::GroundModel]->InitializeBuffers(m_pDevice, 1))
+	int iGroundCount = 5;
+	Instance *groundInstances = new Instance[iGroundCount];
+	groundInstances[0].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.4f, 0.0f, 0.0f) * XMMatrixScaling(0.348f, 0.348f, 0.348f));
+	groundInstances[0].textureTileCount = XMINT2(5, 5);
+	groundInstances[1].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-125.5f, 0.0f, 0.0f) * XMMatrixScaling(0.22f, 0.22f, 0.22f));
+	groundInstances[1].textureTileCount = XMINT2(3, 3);
+	groundInstances[2].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(126.7f, 0.0f, 0.0f) * XMMatrixScaling(0.22f, 0.22f, 0.22f));
+	groundInstances[2].textureTileCount = XMINT2(3, 3);
+	groundInstances[3].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-36.63f, 0.0f, 0.0f) * XMMatrixScaling(0.41f, 0.22f, 0.074f));
+	groundInstances[3].textureTileCount = XMINT2(6, 1);
+	groundInstances[4].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(37.3f, 0.0f, 0.0f) * XMMatrixScaling(0.41f, 0.22f, 0.074f));
+	groundInstances[4].textureTileCount = XMINT2(6, 1);
+	if (!m_txtModels[TxtModelResource::GroundModel]->InitializeBuffers(m_pDevice, iGroundCount, groundInstances))
 	{
 		MessageBox(0, "Failed to initialize ground vertex and index buffers.", "", 0);
 		return false;
 	}
-
-	m_txtModels[TxtModelResource::GroundModel]->TransformWorldMatrix(XMMatrixTranslation(0.4f, 0.0f, 0.0f), XMMatrixIdentity(), XMMatrixScaling(0.22f, 0.22f, 0.22f));
-	m_txtModels[TxtModelResource::GroundModel]->SetTextureTileCount(3, 3);
 	m_txtModels[TxtModelResource::GroundModel]->SetTexture(m_ddsTextures[DdsTextureResource::GroundTexture]);
 
 	// Sky dome
@@ -84,17 +93,37 @@ bool ResourceManager::LoadResources()
 	// Crystal post
 
 	// Distance between 2 posts: 6.55f (3 fences between)
-	// 1.0f post z-movement = 1.1f fence z-movement
+	// 1.0f post movement = 1.1f fence z-movement
 
-	int iCrystalPostCount = 4;
+	int iCrystalPostCount = 12;
 	Instance *crystalPostInstances = new Instance[iCrystalPostCount];
 	XMMATRIX crystalPostScalingMatrix = XMMatrixScaling(1.1f, 1.1f, 1.1f);
+
+	// Center room
 	// Back
-	crystalPostInstances[0].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-3.2f, 0.0f, 3.3f) * crystalPostScalingMatrix);
-	crystalPostInstances[1].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(3.35f, 0.0f, 3.3f) * crystalPostScalingMatrix);
+	crystalPostInstances[0].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-5.473f, 0.0f, 5.573f) * crystalPostScalingMatrix);
+	crystalPostInstances[1].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(5.623f, 0.0f, 5.573f) * crystalPostScalingMatrix);
 	// Front
-	crystalPostInstances[2].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-3.2f, 0.0f, -3.25f) * crystalPostScalingMatrix);
-	crystalPostInstances[3].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(3.35f, 0.0f, -3.25f) * crystalPostScalingMatrix);
+	crystalPostInstances[2].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-5.473f, 0.0f, -5.523f) * crystalPostScalingMatrix);
+	crystalPostInstances[3].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(5.623f, 0.0f, -5.523f) * crystalPostScalingMatrix);
+	
+	// Left room
+	float fDisplacementX = 25.123f;
+	// Back
+	crystalPostInstances[4].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-3.2f - fDisplacementX, 0.0f, 3.3f) * crystalPostScalingMatrix);
+	crystalPostInstances[5].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(3.35f - fDisplacementX, 0.0f, 3.3f) * crystalPostScalingMatrix);
+	// Front
+	crystalPostInstances[6].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-3.2f - fDisplacementX, 0.0f, -3.26f) * crystalPostScalingMatrix);
+	crystalPostInstances[7].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(3.35f - fDisplacementX, 0.0f, -3.26f) * crystalPostScalingMatrix);
+
+	// Right room
+	// Back
+	crystalPostInstances[8].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-3.2f + fDisplacementX, 0.0f, 3.3f) * crystalPostScalingMatrix);
+	crystalPostInstances[9].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(3.35f + fDisplacementX, 0.0f, 3.3f) * crystalPostScalingMatrix);
+	// Front
+	crystalPostInstances[10].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-3.2f + fDisplacementX, 0.0f, -3.25f) * crystalPostScalingMatrix);
+	crystalPostInstances[11].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(3.35f + fDisplacementX, 0.0f, -3.25f) * crystalPostScalingMatrix);
+	
 	for (int i = 0; i < iCrystalPostCount; i++)
 	{
 		crystalPostInstances[i].textureTileCount = XMINT2(1, 1);
@@ -108,12 +137,15 @@ bool ResourceManager::LoadResources()
 
 	// Crystal fence
 
-	// Distance between 2 fences: 2.5f
+	float fDistanceBetweenFences = 2.5f;
 
-	int iCrystalFenceCount = 12;
+	int iCrystalFenceCount = 68;
 	Instance *crystalFenceInstances = new Instance[iCrystalFenceCount];
 	XMMATRIX crystalFenceRotationMatrix = XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 0.5f, XM_PI * 0.0f);
-	// Back
+	
+	// Center room
+
+	/*// Back
 	crystalFenceInstances[0].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f, 0.5f, 3.63f));
 	crystalFenceInstances[1].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.5f, 3.63f));
 	crystalFenceInstances[2].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f, 0.5f, 3.63f));
@@ -123,12 +155,104 @@ bool ResourceManager::LoadResources()
 	crystalFenceInstances[5].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f, 0.5f, -3.575f));
 	// Left
 	crystalFenceInstances[6].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f - 0.11f, 0.5f, -3.575f + 0.05f) * crystalFenceRotationMatrix);
-	crystalFenceInstances[7].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f - 0.11f, 0.5f, -3.575f + 0.05f) * crystalFenceRotationMatrix);
-	crystalFenceInstances[8].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f - 0.11f, 0.5f, -3.575f + 0.05f) * crystalFenceRotationMatrix);
+	//crystalFenceInstances[7].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f - 0.11f, 0.5f, -3.575f + 0.05f) * crystalFenceRotationMatrix);
+	crystalFenceInstances[7].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f - 0.11f, 0.5f, -3.575f + 0.05f) * crystalFenceRotationMatrix);
 	// Right
-	crystalFenceInstances[9].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f - 0.11f, 0.5f, 3.63f + 0.05f) * crystalFenceRotationMatrix);
-	crystalFenceInstances[10].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f - 0.11f, 0.5f, 3.63f + 0.05f) * crystalFenceRotationMatrix);
-	crystalFenceInstances[11].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f - 0.11f, 0.5f, 3.63f + 0.05f) * crystalFenceRotationMatrix);
+	crystalFenceInstances[8].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f - 0.11f, 0.5f, 3.63f + 0.05f) * crystalFenceRotationMatrix);
+	//crystalFenceInstances[10].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f - 0.11f, 0.5f, 3.63f + 0.05f) * crystalFenceRotationMatrix);
+	crystalFenceInstances[9].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f - 0.11f, 0.5f, 3.63f + 0.05f) * crystalFenceRotationMatrix);*/
+	
+	// Back
+	crystalFenceInstances[0].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-5.0f, 0.5f, 6.13f));
+	crystalFenceInstances[1].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f, 0.5f, 6.13f));
+	crystalFenceInstances[2].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.5f, 6.13f));
+	crystalFenceInstances[3].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f, 0.5f, 6.13f));
+	crystalFenceInstances[4].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(5.0f, 0.5f, 6.13f));
+	// Front
+	crystalFenceInstances[5].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-5.0f, 0.5f, -6.075f));
+	crystalFenceInstances[6].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f, 0.5f, -6.075f));
+	crystalFenceInstances[7].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.5f, -6.075f));
+	crystalFenceInstances[8].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f, 0.5f, -6.075f));
+	crystalFenceInstances[9].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(5.0f, 0.5f, -6.075f));
+	// Left
+	crystalFenceInstances[10].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-5.0f - 0.11f, 0.5f, -6.075f + 0.05f) * crystalFenceRotationMatrix);
+	crystalFenceInstances[11].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f - 0.11f, 0.5f, -6.075f + 0.05f) * crystalFenceRotationMatrix);
+	crystalFenceInstances[12].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f - 0.11f, 0.5f, -6.075f + 0.05f) * crystalFenceRotationMatrix);
+	crystalFenceInstances[13].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(5.0f - 0.11f, 0.5f, -6.075f + 0.05f) * crystalFenceRotationMatrix);
+	// Right
+	crystalFenceInstances[14].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-5.0f - 0.11f, 0.5f, 6.13f + 0.05f) * crystalFenceRotationMatrix);
+	crystalFenceInstances[15].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f - 0.11f, 0.5f, 6.13f + 0.05f) * crystalFenceRotationMatrix);
+	crystalFenceInstances[16].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f - 0.11f, 0.5f, 6.13f + 0.05f) * crystalFenceRotationMatrix);
+	crystalFenceInstances[17].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(5.0f - 0.11f, 0.5f, 6.13f + 0.05f) * crystalFenceRotationMatrix);
+
+	// Left room
+	fDisplacementX = 27.63f;
+	// Back
+	crystalFenceInstances[18].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f - fDisplacementX, 0.5f, 3.63f));
+	crystalFenceInstances[19].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f - fDisplacementX, 0.5f, 3.63f));
+	crystalFenceInstances[20].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f - fDisplacementX, 0.5f, 3.63f));
+	// Front
+	crystalFenceInstances[21].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f - fDisplacementX, 0.5f, -3.575f));
+	crystalFenceInstances[22].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f - fDisplacementX, 0.5f, -3.575f));
+	crystalFenceInstances[23].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f - fDisplacementX, 0.5f, -3.575f));
+	// Left
+	crystalFenceInstances[24].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f - 0.11f, 0.5f, -3.575f + 0.05f - fDisplacementX) * crystalFenceRotationMatrix);
+	crystalFenceInstances[25].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f - 0.11f, 0.5f, -3.575f + 0.05f - fDisplacementX) * crystalFenceRotationMatrix);
+	crystalFenceInstances[26].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f - 0.11f, 0.5f, -3.575f + 0.05f - fDisplacementX) * crystalFenceRotationMatrix);
+	// Right
+	crystalFenceInstances[27].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f - 0.11f, 0.5f, 3.63f + 0.05f - fDisplacementX) * crystalFenceRotationMatrix);
+	crystalFenceInstances[28].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f - 0.11f, 0.5f, 3.63f + 0.05f - fDisplacementX) * crystalFenceRotationMatrix);
+
+	// Right room
+	// Back
+	crystalFenceInstances[29].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f + fDisplacementX, 0.5f, 3.63f));
+	crystalFenceInstances[30].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f + fDisplacementX, 0.5f, 3.63f));
+	crystalFenceInstances[31].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f + fDisplacementX, 0.5f, 3.63f));
+	// Front
+	crystalFenceInstances[32].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f + fDisplacementX, 0.5f, -3.575f));
+	crystalFenceInstances[33].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f + fDisplacementX, 0.5f, -3.575f));
+	crystalFenceInstances[34].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f + fDisplacementX, 0.5f, -3.575f));
+	// Left
+	crystalFenceInstances[35].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f - 0.11f, 0.5f, -3.575f + 0.05f + fDisplacementX) * crystalFenceRotationMatrix);
+	crystalFenceInstances[36].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f - 0.11f, 0.5f, -3.575f + 0.05f + fDisplacementX) * crystalFenceRotationMatrix);
+	// Right
+	crystalFenceInstances[37].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(-2.5f - 0.11f, 0.5f, 3.63f + 0.05f + fDisplacementX) * crystalFenceRotationMatrix);
+	crystalFenceInstances[38].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f - 0.11f, 0.5f, 3.63f + 0.05f + fDisplacementX) * crystalFenceRotationMatrix);
+	crystalFenceInstances[39].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(2.5f - 0.11f, 0.5f, 3.63f + 0.05f + fDisplacementX) * crystalFenceRotationMatrix);
+
+	// Left bridge
+	float fStartX = -7.57f;
+	int iStartIndex = 40;
+	int iNumberOfFences = 7;
+	float fFrontZ = -1.0f;
+	float fBackZ = 1.05f;
+	// Front
+	for (int i = iStartIndex; i < iStartIndex + iNumberOfFences; i++)
+	{
+		crystalFenceInstances[i].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(fStartX - (fDistanceBetweenFences * (i - iStartIndex)), 0.5f, fFrontZ));
+	}
+	// Back
+	iStartIndex += iNumberOfFences;
+	for (int i = iStartIndex; i < iStartIndex + iNumberOfFences; i++)
+	{
+		crystalFenceInstances[i].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(fStartX - (fDistanceBetweenFences * (i - iStartIndex)), 0.5f, fBackZ));
+	}
+
+	// Right bridge
+	fStartX = 22.56f;
+	iStartIndex += iNumberOfFences;
+	// Front
+	for (int i = iStartIndex; i < iStartIndex + iNumberOfFences; i++)
+	{
+		crystalFenceInstances[i].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(fStartX - (fDistanceBetweenFences * (i - iStartIndex)), 0.5f, fFrontZ));
+	}
+	// Back
+	iStartIndex += iNumberOfFences;
+	for (int i = iStartIndex; i < iStartIndex + iNumberOfFences; i++)
+	{
+		crystalFenceInstances[i].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(fStartX - (fDistanceBetweenFences * (i - iStartIndex)), 0.5f, fBackZ));
+	}
+
 	for (int i = 0; i < iCrystalFenceCount; i++)
 	{
 		crystalFenceInstances[i].textureTileCount = XMINT2(1, 1);
@@ -146,8 +270,8 @@ bool ResourceManager::LoadResources()
 
 	int iClockCount = 2;
 	Instance *clockInstances = new Instance[iClockCount];
-	clockInstances[0].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 1.0f, -1.0f) * XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 1.0f, XM_PI * 0.0f) * XMMatrixScaling(5.0f, 5.0f, 5.0f));
-	clockInstances[1].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, -0.2f) * XMMatrixRotationRollPitchYaw(XM_PI * -0.5f, XM_PI * 1.0f, XM_PI * 0.0f) * XMMatrixScaling(12.0f, 12.0f, 12.0f));
+	clockInstances[0].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.8f, -1.0f) * XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 1.0f, XM_PI * 0.0f) * XMMatrixScaling(9.0f, 9.0f, 9.0f));
+	clockInstances[1].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, -0.2f) * XMMatrixRotationRollPitchYaw(XM_PI * -0.5f, XM_PI * 1.0f, XM_PI * 0.0f) * XMMatrixScaling(18.0f, 18.0f, 18.0f));
 	for (int i = 0; i < iClockCount; i++)
 	{
 		clockInstances[i].textureTileCount = XMINT2(1, 1);

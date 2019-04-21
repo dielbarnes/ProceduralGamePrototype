@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <vector>
 #include <d3d11.h>
 #include <directxmath.h>
 #include "Utils.h"
@@ -79,7 +80,7 @@ public:
 	bool InitializeBuffers(ID3D11Device *pDevice, int iInstanceCount, Instance *instances = nullptr);
 	void Render(ID3D11DeviceContext *pImmediateContext);
 
-private:
+protected:
 	ID3D11ShaderResourceView *m_pTexture;
 	XMINT2 m_textureTileCount;
 	ID3D11Buffer *m_pVertexBuffer;
@@ -98,4 +99,6 @@ private:
 	XMFLOAT3 m_pointLightColor;
 	float m_fPointLightStrength;
 	XMFLOAT3 m_pointLightPosition;
+
+	void InitializeVerticesAndIndices(std::vector<Vertex> &vertices, std::vector<unsigned long> &indices);
 };

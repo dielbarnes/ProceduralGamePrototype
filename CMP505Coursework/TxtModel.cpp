@@ -46,31 +46,39 @@ TxtModel::~TxtModel()
 	SAFE_RELEASE(m_pInstanceBuffer);
 }
 
-bool TxtModel::InitializeBuffers(ID3D11Device *pDevice, int iInstanceCount, Instance *instances)
+void TxtModel::InitializeVerticesAndIndices(std::vector<Vertex> &vertices, std::vector<unsigned long> &indices)
 {
-	Vertex *vertices = new Vertex[m_iVertexCount];
-	unsigned long *indices = new unsigned long[m_iIndexCount];
-
-	// Load the model data into the vertex and index arrays
 	for (int i = 0; i < m_iVertexCount; i++)
 	{
-		vertices[i].position = XMFLOAT3(m_vertexData[i].x, m_vertexData[i].y, m_vertexData[i].z);
-		vertices[i].textureCoordinates = XMFLOAT2(m_vertexData[i].tu, m_vertexData[i].tv);
-		vertices[i].normal = XMFLOAT3(m_vertexData[i].nx, m_vertexData[i].ny, m_vertexData[i].nz);
+		Vertex vertex;
+		vertex.position = XMFLOAT3(m_vertexData[i].x, m_vertexData[i].y, m_vertexData[i].z);
+		vertex.textureCoordinates = XMFLOAT2(m_vertexData[i].tu, m_vertexData[i].tv);
+		vertex.normal = XMFLOAT3(m_vertexData[i].nx, m_vertexData[i].ny, m_vertexData[i].nz);
+		vertices.push_back(vertex);
 
-		indices[i] = i;
+		unsigned long uiIndex;
+		uiIndex = i;
+		indices.push_back(uiIndex);
 	}
+}
+
+bool TxtModel::InitializeBuffers(ID3D11Device *pDevice, int iInstanceCount, Instance *instances)
+{
+	std::vector<Vertex> vertices;
+	std::vector<unsigned long> indices;
+
+	InitializeVerticesAndIndices(vertices, indices);
 
 	// Create the vertex buffer
 
 	D3D11_BUFFER_DESC bufferDesc = {};
-	bufferDesc.ByteWidth = sizeof(Vertex) * m_iVertexCount;
+	bufferDesc.ByteWidth = sizeof(Vertex) * vertices.size();
 	bufferDesc.Usage = D3D11_USAGE_DEFAULT;							// Require read and write access by the GPU
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;				// Bind the buffer as a vertex buffer to the input assembler stage
 	bufferDesc.CPUAccessFlags = 0;									// No CPU access is necessary
 
 	D3D11_SUBRESOURCE_DATA subresourceData = {}; // Data that will be copied to the buffer during creation
-	subresourceData.pSysMem = vertices;
+	subresourceData.pSysMem = vertices.data();
 
 	HRESULT result = pDevice->CreateBuffer(&bufferDesc, &subresourceData, &m_pVertexBuffer);
 	if (FAILED(result))
@@ -79,14 +87,12 @@ bool TxtModel::InitializeBuffers(ID3D11Device *pDevice, int iInstanceCount, Inst
 		return false;
 	}
 
-	SAFE_DELETE_ARRAY(vertices);
-
 	// Create the index buffer
 
-	bufferDesc.ByteWidth = sizeof(unsigned long) * m_iIndexCount;
+	bufferDesc.ByteWidth = sizeof(unsigned long) * indices.size();
 	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;					// Bind the buffer as an index buffer to the input assembler stage
 
-	subresourceData.pSysMem = indices;
+	subresourceData.pSysMem = indices.data();
 
 	result = pDevice->CreateBuffer(&bufferDesc, &subresourceData, &m_pIndexBuffer);
 	if (FAILED(result))
@@ -94,8 +100,6 @@ bool TxtModel::InitializeBuffers(ID3D11Device *pDevice, int iInstanceCount, Inst
 		Utils::ShowError("Failed to create index buffer.", result);
 		return false;
 	}
-
-	SAFE_DELETE_ARRAY(indices);
 
 	m_iInstanceCount = iInstanceCount;
 
