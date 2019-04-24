@@ -28,7 +28,8 @@ enum ModelResource : int
 {
 	CrystalPostModel = 0,
 	CrystalFenceModel,
-	ClockModel
+	ClockModel, 
+	TestModel
 };
 
 class ResourceManager

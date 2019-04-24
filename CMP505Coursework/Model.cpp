@@ -259,6 +259,187 @@ HRESULT Model::Create1x1ColorTexture(ID3D11Device *pDevice, unsigned char color[
 
 #pragma endregion
 
+#pragma region Procedural Geometry
+
+void Model::AddTubeMesh(float fInnerRadius, float fOuterRadius, float fHeight, UINT uiSubdivisions, XMMATRIX transformMatrix)
+{
+	std::vector<Vertex> vertices;
+	vertices.reserve(uiSubdivisions * 2 * 2);	// * 2 (inner and outer ring) * 2 (top and bottom)
+	std::vector<DWORD> indices;
+	indices.reserve(uiSubdivisions * 6);		// Each subdivision has a pair of triangles (6 indices)
+
+	XMVECTOR vForward = XMVectorSet(0, 0, 1, 0);
+
+	float fAngle = 2 * XM_PI / float(uiSubdivisions);
+	XMMATRIX rotationMatrix = XMMatrixRotationAxis(XMVectorSet(0, 1, 0, 0), fAngle);
+
+	// Top cap
+	for (unsigned int i = 0; i < uiSubdivisions; ++i)
+	{
+		XMVECTOR vOuterPosition = vForward * fOuterRadius;
+		vOuterPosition.m128_f32[1] = fHeight * 0.5f;
+		XMVECTOR vOuterNormal = XMVector3Normalize(vOuterPosition);
+
+		Vertex outerVertex;
+		XMStoreFloat3(&outerVertex.position, vOuterPosition);
+		outerVertex.textureCoordinates = XMFLOAT2();
+		XMStoreFloat3(&outerVertex.normal, vOuterNormal);
+		vertices.push_back(outerVertex);
+
+		XMVECTOR vInnerPosition = vForward * fInnerRadius;
+		vInnerPosition.m128_f32[1] = fHeight * 0.5f;
+		XMVECTOR vInnerNormal = XMVector3Normalize(vInnerPosition);
+
+		Vertex innerVertex;
+		XMStoreFloat3(&innerVertex.position, vInnerPosition);
+		innerVertex.textureCoordinates = XMFLOAT2();
+		XMStoreFloat3(&innerVertex.normal, vInnerNormal);
+		vertices.push_back(innerVertex);
+
+		vForward = XMVector3TransformCoord(vForward, rotationMatrix);
+
+		if (i == uiSubdivisions - 1)
+			break;
+
+		indices.insert(indices.end(), { i * 2, (i + 1) * 2, i * 2 + 1 });			// Top left, top right, bottom left
+		indices.insert(indices.end(), { i * 2 + 1, (i + 1) * 2, (i + 1) * 2 + 1 });	// Bottom left, top right, bottom right
+	}
+	// Add last indices
+	indices.insert(indices.end(), { (uiSubdivisions - 1) * 2, 0, (uiSubdivisions - 1) * 2 + 1 });
+	indices.insert(indices.end(), { (uiSubdivisions - 1) * 2 + 1, 0, 1 });
+	// Replicate bottom cap by going backwards through indices
+	for (int i = uiSubdivisions * 6 - 1; i >= 0; i--)
+		indices.emplace_back(indices[i] + vertices.size());
+
+	// Outside cylinder walls
+	for (unsigned int i = 0; i < uiSubdivisions; ++i)
+	{
+		indices.insert(indices.end(), { ((i + 1) % uiSubdivisions) * 2, i * 2, (i + uiSubdivisions) * 2 });
+		indices.insert(indices.end(), { ((i + 1) % uiSubdivisions) * 2, (i + uiSubdivisions) * 2 , (i + 1 + uiSubdivisions) * 2 });
+	}
+	// Fix last index
+	indices.back() = uiSubdivisions * 2;
+
+	// Inside cylinder walls
+	for (unsigned int i = 0; i < uiSubdivisions; ++i)
+	{
+		indices.insert(indices.end(), { i * 2 + 1, (i + 1) * 2 + 1, (i + 1 + uiSubdivisions) * 2 + 1 });
+		indices.insert(indices.end(), { i * 2 + 1, (i + 1 + uiSubdivisions) * 2 + 1 , (i + uiSubdivisions) * 2 + 1 });
+	}
+	indices[indices.size() - 5] = 1;
+	indices[indices.size() - 4] = uiSubdivisions * 2 + 1;
+	indices[indices.size() - 2] = uiSubdivisions * 2 + 1;
+
+	for (unsigned int i = 0; i < uiSubdivisions; ++i)
+	{
+		XMVECTOR vOuterPosition = vForward * fOuterRadius;
+		vOuterPosition.m128_f32[1] = -fHeight * 0.5f;
+		XMVECTOR vOuterNormal = XMVector3Normalize(vOuterPosition);
+
+		Vertex outerVertex;
+		XMStoreFloat3(&outerVertex.position, vOuterPosition);
+		outerVertex.textureCoordinates = XMFLOAT2();
+		XMStoreFloat3(&outerVertex.normal, vOuterNormal);
+		vertices.push_back(outerVertex);
+
+		XMVECTOR vInnerPosition = vForward * fInnerRadius;
+		vInnerPosition.m128_f32[1] = -fHeight * 0.5f;
+		XMVECTOR vInnerNormal = XMVector3Normalize(vInnerPosition);
+
+		Vertex innerVertex;
+		XMStoreFloat3(&innerVertex.position, vInnerPosition);
+		innerVertex.textureCoordinates = XMFLOAT2();
+		XMStoreFloat3(&innerVertex.normal, vInnerNormal);
+		vertices.push_back(innerVertex);
+
+		vForward = XMVector3TransformCoord(vForward, rotationMatrix);
+	}
+
+	// Create mesh
+	std::vector<ID3D11ShaderResourceView*> textures = { m_pDefaultTexture };
+	Mesh *pMesh = new Mesh(textures, transformMatrix);
+	if (!pMesh->InitializeBuffers(m_pDevice, vertices, indices, 1))
+	{
+		MessageBox(0, "Failed to initialize tube vertex and index buffers.", "", 0);
+	}
+
+	m_meshes.push_back(pMesh);
+}
+
+void Model::AddCylinderMesh(float fRadius, float fHeight, UINT uiSubdivisions, XMMATRIX transformMatrix)
+{
+	std::vector<DirectX::VertexPositionNormalTexture> gpVertices;
+	std::vector<uint16_t> gpIndices;
+	DirectX::GeometricPrimitive::CreateCylinder(gpVertices, gpIndices, fHeight, fRadius * 2, uiSubdivisions, false);
+
+	std::vector<Vertex> vertices;
+	vertices.reserve(gpVertices.size());
+	std::vector<DWORD> indices;
+	indices.reserve(gpIndices.size());
+
+	for (auto gpVertex : gpVertices)
+	{
+		Vertex vertex;
+		vertex.position = gpVertex.position;
+		vertex.textureCoordinates = gpVertex.textureCoordinate;
+		vertex.normal = gpVertex.normal;
+		vertices.push_back(vertex);
+	}
+
+	for (auto gpIndex : gpIndices)
+	{
+		indices.push_back(gpIndex);
+	}
+
+	// Create mesh
+	std::vector<ID3D11ShaderResourceView*> textures = { m_pDefaultTexture };
+	Mesh *pMesh = new Mesh(textures, transformMatrix);
+	if (!pMesh->InitializeBuffers(m_pDevice, vertices, indices, 1))
+	{
+		MessageBox(0, "Failed to initialize cylinder vertex and index buffers.", "", 0);
+	}
+
+	m_meshes.push_back(pMesh);
+}
+
+void Model::AddCubeMesh(float fSize, XMMATRIX transformMatrix)
+{
+	std::vector<DirectX::VertexPositionNormalTexture> gpVertices;
+	std::vector<uint16_t> gpIndices;
+	DirectX::GeometricPrimitive::CreateCube(gpVertices, gpIndices, fSize, false);
+
+	std::vector<Vertex> vertices;
+	vertices.reserve(gpVertices.size());
+	std::vector<DWORD> indices;
+	indices.reserve(gpIndices.size());
+
+	for (auto gpVertex : gpVertices)
+	{
+		Vertex vertex;
+		vertex.position = gpVertex.position;
+		vertex.textureCoordinates = gpVertex.textureCoordinate;
+		vertex.normal = gpVertex.normal;
+		vertices.push_back(vertex);
+	}
+
+	for (auto gpIndex : gpIndices)
+	{
+		indices.push_back(gpIndex);
+	}
+
+	// Create mesh
+	std::vector<ID3D11ShaderResourceView*> textures = { m_pDefaultTexture };
+	Mesh *pMesh = new Mesh(textures, transformMatrix);
+	if (!pMesh->InitializeBuffers(m_pDevice, vertices, indices, 1))
+	{
+		MessageBox(0, "Failed to initialize cube vertex and index buffers.", "", 0);
+	}
+
+	m_meshes.push_back(pMesh);
+}
+
+#pragma endregion
+
 #pragma region Setters/Getters
 
 std::vector<Mesh*> Model::GetMeshes()

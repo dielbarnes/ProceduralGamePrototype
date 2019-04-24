@@ -13,10 +13,7 @@
 Camera::Camera(XMFLOAT3 position, float fAspectRatio)
 {
 	// Set the initial camera position
-	m_vPosition.m128_f32[0] = position.x;
-	m_vPosition.m128_f32[1] = position.y;
-	m_vPosition.m128_f32[2] = position.z;
-	m_vPosition.m128_f32[3] = 0;
+	m_vPosition = XMVectorSet(position.x, position.y, position.z, 0);
 	m_rotation = XMFLOAT3(20 / 180 * XM_PI, 0.0f, 0.0f);
 
 	// Initialize the projection matrix

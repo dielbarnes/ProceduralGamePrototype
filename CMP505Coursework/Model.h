@@ -9,6 +9,7 @@
 #pragma once
 
 #include <directxmath.h>
+#include <DirectXTK/GeometricPrimitive.h>
 #include <DirectXTK/DDSTextureLoader.h>
 #include <DirectXTK/WICTextureLoader.h>
 #include <Assimp/Importer.hpp>
@@ -41,6 +42,10 @@ public:
 	bool Initialize(std::string strFilePath, int iInstanceCount, Instance *instances = nullptr);
 	static HRESULT Create1x1ColorTexture(ID3D11Device *pDevice, unsigned char color[4], ID3D11ShaderResourceView **pTexture);
 
+	void AddTubeMesh(float fInnerRadius, float fOuterRadius, float fHeight, UINT uiSubdivisions, XMMATRIX transformMatrix);
+	void AddCylinderMesh(float fRadius, float fHeight, UINT uiSubdivisions, XMMATRIX transformMatrix);
+	void AddCubeMesh(float fSize, XMMATRIX transformMatrix);
+
 private:
 	ID3D11Device *m_pDevice;
 	ID3D11DeviceContext *m_pImmediateContext;
@@ -58,7 +63,7 @@ private:
 	XMFLOAT3 m_pointLightPosition;
 
 	void ProcessNode(aiNode *pNode, const aiScene *pScene, XMMATRIX parentTransformMatrix, int iInstanceCount, Instance *instances = nullptr);
-	Mesh* ProcessMesh(aiMesh *pMesh, const aiScene *pScene, XMMATRIX transformMatrix, int iInstanceCount, Instance *instances = nullptr);
+	Mesh* ProcessMesh(aiMesh *pAiMesh, const aiScene *pScene, XMMATRIX transformMatrix, int iInstanceCount, Instance *instances = nullptr);
 	std::vector<ID3D11ShaderResourceView*> LoadMaterialTextures(aiMaterial *pMaterial, aiTextureType textureType, const aiScene *pScene);
 	void LoadEmbeddedTexture(const uint8_t *pData, size_t size, ID3D11ShaderResourceView *pTexture);
 	void LoadDiskTexture(std::string strFilePath, ID3D11ShaderResourceView **pTexture);

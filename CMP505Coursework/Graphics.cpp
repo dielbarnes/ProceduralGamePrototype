@@ -483,6 +483,15 @@ bool Graphics::Render(const float fDeltaTime)
 	// Turn off alpha blending
 	m_pImmediateContext->OMSetBlendState(m_pBlendStateDisabled, blendFactor, sampleMask);
 
+
+
+	if (!m_pResourceManager->RenderModel(ModelResource::TestModel, m_pCamera, m_pShaderManager->GetLightShader()))
+	{
+		return false;
+	}
+
+
+
 	// For debugging only: save original scene texture as jpg
 	//m_pOffScreenRenderer->SaveTextureToFile();
 
