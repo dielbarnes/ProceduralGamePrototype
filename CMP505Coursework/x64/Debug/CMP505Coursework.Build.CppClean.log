@@ -8,10 +8,8 @@ c:\users\dielb\desktop\cmp505coursework\cmp505coursework\x64\debug\shadermanager
 c:\users\dielb\desktop\cmp505coursework\cmp505coursework\x64\debug\shader.obj
 c:\users\dielb\desktop\cmp505coursework\cmp505coursework\x64\debug\resourcemanager.obj
 c:\users\dielb\desktop\cmp505coursework\cmp505coursework\x64\debug\txtmodel.obj
-c:\users\dielb\desktop\cmp505coursework\cmp505coursework\x64\debug\cogwheel.obj
 c:\users\dielb\desktop\cmp505coursework\cmp505coursework\x64\debug\postprocessquad.obj
 c:\users\dielb\desktop\cmp505coursework\cmp505coursework\x64\debug\offscreenrenderer.obj
-c:\users\dielb\desktop\cmp505coursework\cmp505coursework\x64\debug\model.obj
 c:\users\dielb\desktop\cmp505coursework\cmp505coursework\x64\debug\mesh.obj
 c:\users\dielb\desktop\cmp505coursework\cmp505coursework\x64\debug\main.obj
 c:\users\dielb\desktop\cmp505coursework\cmp505coursework\x64\debug\lightshader.obj
@@ -20,6 +18,7 @@ c:\users\dielb\desktop\cmp505coursework\cmp505coursework\x64\debug\camera.obj
 c:\users\dielb\desktop\cmp505coursework\cmp505coursework\x64\debug\engine.obj
 c:\users\dielb\desktop\cmp505coursework\cmp505coursework\x64\debug\blur.obj
 c:\users\dielb\desktop\cmp505coursework\cmp505coursework\x64\debug\bloom.obj
+c:\users\dielb\desktop\cmp505coursework\cmp505coursework\x64\debug\model.obj
 c:\users\dielb\desktop\cmp505coursework\x64\debug\bloomcombinepixelshader.cso
 c:\users\dielb\desktop\cmp505coursework\x64\debug\bloomextractpixelshader.cso
 c:\users\dielb\desktop\cmp505coursework\x64\debug\bloomvertexshader.cso

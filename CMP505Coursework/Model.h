@@ -42,9 +42,10 @@ public:
 	bool Initialize(std::string strFilePath, int iInstanceCount, Instance *instances = nullptr);
 	static HRESULT Create1x1ColorTexture(ID3D11Device *pDevice, unsigned char color[4], ID3D11ShaderResourceView **pTexture);
 
+	void GenerateCogwheel();
 	void AddTubeMesh(float fInnerRadius, float fOuterRadius, float fHeight, UINT uiSubdivisions, XMMATRIX transformMatrix);
 	void AddCylinderMesh(float fRadius, float fHeight, UINT uiSubdivisions, XMMATRIX transformMatrix);
-	void AddCubeMesh(float fSize, XMMATRIX transformMatrix);
+	void AddBoxMesh(XMFLOAT3 size, XMMATRIX transformMatrix);
 
 private:
 	ID3D11Device *m_pDevice;

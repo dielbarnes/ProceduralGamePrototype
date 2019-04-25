@@ -15,7 +15,7 @@ Model::Model(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext, ID3D
 	m_pDevice = pDevice;
 	m_pImmediateContext = pImmediateContext;
 	m_pDefaultTexture = pDefaultTexture;
-	m_iInstanceCount = 0;
+	m_iInstanceCount = 1;
 	m_ambientColor = COLOR_XMF4(51.0f, 51.0f, 51.0f, 1.0f); // Ambient should not be too bright otherwise the scene will appear overexposed and washed-out
 	m_diffuseColor = COLOR_XMF4(180.0f, 100.0f, 255.0f, 1.0f);
 
@@ -261,6 +261,33 @@ HRESULT Model::Create1x1ColorTexture(ID3D11Device *pDevice, unsigned char color[
 
 #pragma region Procedural Geometry
 
+void Model::GenerateCogwheel()
+{
+	float fOuterRadius1 = 3.0f;
+	float fOuterRadius2 = 1.0f;
+	float fHeight = 0.5f;
+	int iToothCount = 7;
+	int iSpokeCount = 3;
+
+	//AddTubeMesh(2.0f, fOuterRadius, fHeight, 24, XMMatrixRotationRollPitchYaw(XM_PI * 0.5f, XM_PI * 0.0f, XM_PI * 0.0f));
+	//AddCylinderMesh(fOuterRadius1, fHeight, 24, XMMatrixRotationRollPitchYaw(XM_PI * 0.5f, XM_PI * 0.0f, XM_PI * 0.0f));
+
+	AddTubeMesh(2.0f, fOuterRadius1, fHeight, 24, XMMatrixRotationRollPitchYaw(XM_PI * 0.5f, XM_PI * 0.0f, XM_PI * 0.0f));
+	AddTubeMesh(0.5f, fOuterRadius2, fHeight, 24, XMMatrixRotationRollPitchYaw(XM_PI * 0.5f, XM_PI * 0.0f, XM_PI * 0.0f));
+
+	XMMATRIX boxTranslationMatrix = XMMatrixTranslation(0.0f, fOuterRadius1 + (fHeight / 2) - 0.2f, 0.0f);
+	for (int i = 0; i < iToothCount; i++)
+	{
+		AddBoxMesh(XMFLOAT3(fHeight * 2, fHeight * 2.5, fHeight * 0.99), boxTranslationMatrix * XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 0.0f, 2 * XM_PI / iToothCount * i));
+	}
+
+	XMMATRIX boxTranslationMatrix2 = XMMatrixTranslation(0.0f, fOuterRadius2 + 1.5f/2.0f - 0.2f, 0.0f);
+	for (int i = 0; i < iSpokeCount; i++)
+	{
+		AddBoxMesh(XMFLOAT3(0.5f, 1.5f, fHeight * 0.99), boxTranslationMatrix2 * XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 0.0f, 2 * XM_PI / iSpokeCount * i));
+	}
+}
+
 void Model::AddTubeMesh(float fInnerRadius, float fOuterRadius, float fHeight, UINT uiSubdivisions, XMMATRIX transformMatrix)
 {
 	std::vector<Vertex> vertices;
@@ -278,7 +305,8 @@ void Model::AddTubeMesh(float fInnerRadius, float fOuterRadius, float fHeight, U
 	{
 		XMVECTOR vOuterPosition = vForward * fOuterRadius;
 		vOuterPosition.m128_f32[1] = fHeight * 0.5f;
-		XMVECTOR vOuterNormal = XMVector3Normalize(vOuterPosition);
+		//XMVECTOR vOuterNormal = XMVector3Normalize(vOuterPosition);
+		XMVECTOR vOuterNormal = XMVectorSet(0, 1, 0, 0);
 
 		Vertex outerVertex;
 		XMStoreFloat3(&outerVertex.position, vOuterPosition);
@@ -288,7 +316,11 @@ void Model::AddTubeMesh(float fInnerRadius, float fOuterRadius, float fHeight, U
 
 		XMVECTOR vInnerPosition = vForward * fInnerRadius;
 		vInnerPosition.m128_f32[1] = fHeight * 0.5f;
-		XMVECTOR vInnerNormal = XMVector3Normalize(vInnerPosition);
+		//XMVECTOR vInnerNormal = XMVector3Normalize(vInnerPosition);
+		/*XMVECTOR vInnerNormal = -vInnerPosition;
+		vInnerNormal.m128_f32[1] *= -1;
+		vInnerNormal = XMVector3Normalize(vInnerNormal);*/
+		XMVECTOR vInnerNormal = vOuterNormal;
 
 		Vertex innerVertex;
 		XMStoreFloat3(&innerVertex.position, vInnerPosition);
@@ -334,7 +366,8 @@ void Model::AddTubeMesh(float fInnerRadius, float fOuterRadius, float fHeight, U
 	{
 		XMVECTOR vOuterPosition = vForward * fOuterRadius;
 		vOuterPosition.m128_f32[1] = -fHeight * 0.5f;
-		XMVECTOR vOuterNormal = XMVector3Normalize(vOuterPosition);
+		//XMVECTOR vOuterNormal = XMVector3Normalize(vOuterPosition);
+		XMVECTOR vOuterNormal = XMVectorSet(0, -1, 0, 0);
 
 		Vertex outerVertex;
 		XMStoreFloat3(&outerVertex.position, vOuterPosition);
@@ -344,7 +377,11 @@ void Model::AddTubeMesh(float fInnerRadius, float fOuterRadius, float fHeight, U
 
 		XMVECTOR vInnerPosition = vForward * fInnerRadius;
 		vInnerPosition.m128_f32[1] = -fHeight * 0.5f;
-		XMVECTOR vInnerNormal = XMVector3Normalize(vInnerPosition);
+		//XMVECTOR vInnerNormal = XMVector3Normalize(vInnerPosition);
+		/*XMVECTOR vInnerNormal = -vInnerPosition;
+		vInnerNormal.m128_f32[1] *= -1;
+		vInnerNormal = XMVector3Normalize(vInnerNormal);*/
+		XMVECTOR vInnerNormal = vOuterNormal;
 
 		Vertex innerVertex;
 		XMStoreFloat3(&innerVertex.position, vInnerPosition);
@@ -370,7 +407,7 @@ void Model::AddCylinderMesh(float fRadius, float fHeight, UINT uiSubdivisions, X
 {
 	std::vector<DirectX::VertexPositionNormalTexture> gpVertices;
 	std::vector<uint16_t> gpIndices;
-	DirectX::GeometricPrimitive::CreateCylinder(gpVertices, gpIndices, fHeight, fRadius * 2, uiSubdivisions, false);
+	GeometricPrimitive::CreateCylinder(gpVertices, gpIndices, fHeight, fRadius * 2, uiSubdivisions, false);
 
 	std::vector<Vertex> vertices;
 	vertices.reserve(gpVertices.size());
@@ -402,11 +439,11 @@ void Model::AddCylinderMesh(float fRadius, float fHeight, UINT uiSubdivisions, X
 	m_meshes.push_back(pMesh);
 }
 
-void Model::AddCubeMesh(float fSize, XMMATRIX transformMatrix)
+void Model::AddBoxMesh(XMFLOAT3 size, XMMATRIX transformMatrix)
 {
 	std::vector<DirectX::VertexPositionNormalTexture> gpVertices;
 	std::vector<uint16_t> gpIndices;
-	DirectX::GeometricPrimitive::CreateCube(gpVertices, gpIndices, fSize, false);
+	GeometricPrimitive::CreateBox(gpVertices, gpIndices, size, false);
 
 	std::vector<Vertex> vertices;
 	vertices.reserve(gpVertices.size());

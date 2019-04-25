@@ -254,9 +254,6 @@ bool LightShader::PreRender(int iInstanceCount, XMINT2 textureTileCount, XMFLOAT
 
 bool LightShader::Render(TxtModel *pModel, Camera *pCamera)
 {
-	std::vector<ID3D11ShaderResourceView*> textures;
-	textures.push_back(pModel->GetTexture());
-
 	if (!PreRender(pModel->GetInstanceCount(), pModel->GetTextureTileCount(), pModel->GetAmbientColor(),
 				   pModel->GetDiffuseColor(), pModel->GetSpecularColor(), pModel->GetSpecularPower(),
 				   pModel->GetLightDirection(), pModel->GetPointLightColor(), pModel->GetPointLightStrength(), 
@@ -264,6 +261,9 @@ bool LightShader::Render(TxtModel *pModel, Camera *pCamera)
 	{
 		return false;
 	}
+
+	std::vector<ID3D11ShaderResourceView*> textures;
+	textures.push_back(pModel->GetTexture());
 
 	Render(pModel->GetInstanceCount(), pModel->GetWorldMatrix(), textures, pModel->GetIndexCount(), pCamera);
 

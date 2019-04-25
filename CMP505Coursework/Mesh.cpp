@@ -123,7 +123,7 @@ void Mesh::SetWorldMatrix(XMMATRIX worldMatrix)
 
 XMMATRIX Mesh::GetWorldMatrix()
 {
-	return m_worldMatrix * m_transformMatrix;
+	return m_transformMatrix * m_worldMatrix;
 }
 
 #pragma endregion

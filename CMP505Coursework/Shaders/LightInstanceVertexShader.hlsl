@@ -58,7 +58,7 @@ PS_INPUT VS(VS_INPUT input)
 	input.position.w = 1.0f;
 
 	// Calculate the position of the vertex in the world
-	float4 worldPosition = mul(input.position, input.worldMatrix);
+    float4 worldPosition = mul(input.position, input.worldMatrix);
     output.position = worldPosition;
     output.worldPosition = worldPosition;
 
@@ -72,7 +72,7 @@ PS_INPUT VS(VS_INPUT input)
     output.texCoord = float2(input.texCoord.x * input.texTileCount.x, input.texCoord.y * input.texTileCount.y);
 
 	// Calculate the normal vector against the world matrix only
-	output.normal = mul(input.normal, (float3x3)input.worldMatrix);
+    output.normal = mul(input.normal, (float3x3) input.worldMatrix);
 
 	// Normalize the normal vector
 	output.normal = normalize(output.normal);

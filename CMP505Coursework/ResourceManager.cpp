@@ -283,13 +283,12 @@ bool ResourceManager::LoadResources()
 		return false;
 	}
 
-	// Tube
+	// Test
 
 	Model *pModel = new Model(m_pDevice, m_pImmediateContext, m_pDefaultTexture);
-	//pModel->AddTubeMesh(0.1f, 0.3f, 0.1f, 24, XMMatrixIdentity());
-	//pModel->AddCylinderMesh(0.3f, 0.1f, 24, XMMatrixIdentity());
-	pModel->AddCubeMesh(0.3f, XMMatrixIdentity());
+	pModel->GenerateCogwheel();
 	m_models.push_back(pModel);
+	pModel->SetWorldMatrix(XMMatrixTranslation(-28.0f, 5.0f, 0.0f));
 
 	return true;
 }
