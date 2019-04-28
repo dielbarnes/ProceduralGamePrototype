@@ -11,6 +11,7 @@ ResourceManager::ResourceManager(ID3D11Device *pDevice, ID3D11DeviceContext *pIm
 {
 	m_pDevice = pDevice;
 	m_pImmediateContext = pImmediateContext;
+	m_pLSystem = new LSystem();
 
 	unsigned char color[] = { 200, 200, 220, 255 };
 	Model::Create1x1ColorTexture(m_pDevice, color, &m_pDefaultTexture);
@@ -286,9 +287,16 @@ bool ResourceManager::LoadResources()
 	// Test
 
 	Model *pModel = new Model(m_pDevice, m_pImmediateContext, m_pDefaultTexture);
-	pModel->GenerateCogwheel();
+	//pModel->GenerateCogwheel();
+
+	Module module(CYLINDER_SYMBOL, { 3.0f, 11, 0, 1.0f, 1.0f });
+	Word axiom = { module };
+	m_pLSystem->GenerateModel(axiom, pModel);
+
 	m_models.push_back(pModel);
 	pModel->SetWorldMatrix(XMMatrixTranslation(-28.0f, 5.0f, 0.0f));
+	pModel->SetPointLightColor(COLOR_XMF4(0.0f, 0.0f, 0.0f, 1.0f));
+	pModel->SetPointLightStrength(0.0f);
 
 	return true;
 }

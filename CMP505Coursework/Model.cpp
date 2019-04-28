@@ -263,28 +263,36 @@ HRESULT Model::Create1x1ColorTexture(ID3D11Device *pDevice, unsigned char color[
 
 void Model::GenerateCogwheel()
 {
+	// 3.0f outer radius: 5 - 11 teeth
+
 	float fOuterRadius1 = 3.0f;
+	float fInnerRadius1 = 2.0f;
 	float fOuterRadius2 = 1.0f;
-	float fHeight = 0.5f;
-	int iToothCount = 7;
-	int iSpokeCount = 3;
+	float fInnerRadius2 = 0.5f;
+	float fCogwheelThickness = 0.5f;
+	UINT uiSubdivisions = 24;
+	XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(XM_PI * 0.5f, XM_PI * 0.0f, XM_PI * 0.0f);
+	AddTubeMesh(fInnerRadius1, fOuterRadius1, fCogwheelThickness, uiSubdivisions, rotationMatrix);
+	AddTubeMesh(fInnerRadius2, fOuterRadius2, fCogwheelThickness, uiSubdivisions, rotationMatrix);
+	//AddCylinderMesh(fOuterRadius1, fCogwheelThickness, uiSubdivisions, rotationMatrix);
+	//AddCylinderMesh(fOuterRadius2, fCogwheelThickness, uiSubdivisions, rotationMatrix);
 
-	//AddTubeMesh(2.0f, fOuterRadius, fHeight, 24, XMMatrixRotationRollPitchYaw(XM_PI * 0.5f, XM_PI * 0.0f, XM_PI * 0.0f));
-	//AddCylinderMesh(fOuterRadius1, fHeight, 24, XMMatrixRotationRollPitchYaw(XM_PI * 0.5f, XM_PI * 0.0f, XM_PI * 0.0f));
-
-	AddTubeMesh(2.0f, fOuterRadius1, fHeight, 24, XMMatrixRotationRollPitchYaw(XM_PI * 0.5f, XM_PI * 0.0f, XM_PI * 0.0f));
-	AddTubeMesh(0.5f, fOuterRadius2, fHeight, 24, XMMatrixRotationRollPitchYaw(XM_PI * 0.5f, XM_PI * 0.0f, XM_PI * 0.0f));
-
-	XMMATRIX boxTranslationMatrix = XMMatrixTranslation(0.0f, fOuterRadius1 + (fHeight / 2) - 0.2f, 0.0f);
+	int iToothCount = 11;
+	float fToothWidth = 1.0f;
+	float fToothHeight = 1.0f;
+	XMMATRIX toothTranslationMatrix = XMMatrixTranslation(0.0f, fOuterRadius1 + (fToothHeight / 2) - 0.2f, 0.0f);
 	for (int i = 0; i < iToothCount; i++)
 	{
-		AddBoxMesh(XMFLOAT3(fHeight * 2, fHeight * 2.5, fHeight * 0.99), boxTranslationMatrix * XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 0.0f, 2 * XM_PI / iToothCount * i));
+		AddBoxMesh(XMFLOAT3(fToothWidth, fToothHeight, fCogwheelThickness * 0.99), toothTranslationMatrix * XMMatrixRotationRollPitchYaw(0.0f, 0.0f, 2 * XM_PI / iToothCount * i));
 	}
 
-	XMMATRIX boxTranslationMatrix2 = XMMatrixTranslation(0.0f, fOuterRadius2 + 1.5f/2.0f - 0.2f, 0.0f);
+	int iSpokeCount = 5;
+	float fSpokeWidth = 0.5f;
+	float fSpokeHeight = fInnerRadius1 - fInnerRadius2;
+	XMMATRIX spokeTranslationMatrix = XMMatrixTranslation(0.0f, fOuterRadius2 + (fSpokeHeight / 2) - 0.2f, 0.0f);
 	for (int i = 0; i < iSpokeCount; i++)
 	{
-		AddBoxMesh(XMFLOAT3(0.5f, 1.5f, fHeight * 0.99), boxTranslationMatrix2 * XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 0.0f, 2 * XM_PI / iSpokeCount * i));
+		AddBoxMesh(XMFLOAT3(fSpokeWidth, fSpokeHeight, fCogwheelThickness * 0.99), spokeTranslationMatrix * XMMatrixRotationRollPitchYaw(0.0f, 0.0f, 2 * XM_PI / iSpokeCount * i));
 	}
 }
 
@@ -517,14 +525,29 @@ float Model::GetSpecularPower()
 	return m_fSpecularPower;
 }
 
+void Model::SetLightDirection(XMFLOAT3 lightDirection)
+{
+	m_lightDirection = lightDirection;
+}
+
 XMFLOAT3 Model::GetLightDirection()
 {
 	return m_lightDirection;
 }
 
+void Model::SetPointLightColor(XMFLOAT4 color)
+{
+	m_pointLightColor = XMFLOAT3(color.x, color.y, color.z);
+}
+
 XMFLOAT3 Model::GetPointLightColor()
 {
 	return m_pointLightColor;
+}
+
+void Model::SetPointLightStrength(float fStrength)
+{
+	m_fPointLightStrength = fStrength;
 }
 
 float Model::GetPointLightStrength()

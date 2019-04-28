@@ -33,8 +33,11 @@ public:
 	XMFLOAT4 GetDiffuseColor();
 	XMFLOAT4 GetSpecularColor();
 	float GetSpecularPower();
+	void SetLightDirection(XMFLOAT3 lightDirection);
 	XMFLOAT3 GetLightDirection();
+	void SetPointLightColor(XMFLOAT4 color);
 	XMFLOAT3 GetPointLightColor();
+	void SetPointLightStrength(float fStrength);
 	float GetPointLightStrength();
 	void SetPointLightPosition(XMFLOAT3 position);
 	XMFLOAT3 GetPointLightPosition();
@@ -42,7 +45,7 @@ public:
 	bool Initialize(std::string strFilePath, int iInstanceCount, Instance *instances = nullptr);
 	static HRESULT Create1x1ColorTexture(ID3D11Device *pDevice, unsigned char color[4], ID3D11ShaderResourceView **pTexture);
 
-	void GenerateCogwheel();
+	void GenerateCogwheel(); // Test function
 	void AddTubeMesh(float fInnerRadius, float fOuterRadius, float fHeight, UINT uiSubdivisions, XMMATRIX transformMatrix);
 	void AddCylinderMesh(float fRadius, float fHeight, UINT uiSubdivisions, XMMATRIX transformMatrix);
 	void AddBoxMesh(XMFLOAT3 size, XMMATRIX transformMatrix);

@@ -11,6 +11,7 @@
 #include "SkyDome.h"
 #include "Model.h"
 #include "LightShader.h"
+#include "LSystem.h"
 #include "Utils.h"
 
 enum DdsTextureResource : int
@@ -54,6 +55,7 @@ private:
 	std::vector<TxtModel*> m_txtModels;
 	SkyDome *m_pSkyDome;
 	std::vector<Model*> m_models;
+	LSystem *m_pLSystem;
 
 	HRESULT LoadDdsTexture(DdsTextureResource resource);
 	bool LoadTxtModel(TxtModelResource resource);
