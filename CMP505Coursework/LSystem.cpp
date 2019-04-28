@@ -62,7 +62,7 @@ void LSystem::AddRules()
 		float fBoxHeight = cylinder.parameters[CylinderParameters::CylinderBoxHeight];
 
 		Module nextCylinder(CYLINDER_SYMBOL, { fCylinderRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
-		Module translate(TRANSLATE_UP_SYMBOL, { fCylinderRadius + (fBoxHeight/2) - 0.2f });
+		Module translate(TRANSLATE_UP_SYMBOL, { fCylinderRadius + (fBoxHeight / 2) - 0.2f });
 		Module box(BOX_SYMBOL, { fBoxWidth, fBoxHeight });
 
 		return { nextCylinder, translate, box };
@@ -79,14 +79,405 @@ void LSystem::AddRules()
 
 	// Tube rules
 
-	Rule rule3(BoxCountGreaterThanOne, {});
-	Rule rule4(BoxCountEqualToOne, {});
-	Rule rule5(BoxCountEqualToZero, {});
+	//   T(r1, r2, b, i, w, h)  :  b > 1               ->  T(r1, r2, b-1, i, w, h) /(360/b*i) B(w, h)
+	//                          :  b == 1              ->  T(r1, r2, 0, i, w, h) ^(r + (h/2) - 0.2) B(w, h)
+	//                          :  b == 0, r1 >= 1.25  ->  T(r1, r2, 0, i, w, h)
+
+	SuccessorFunction TubeRule1Successor = [this](Module tube) -> Word
+	{
+		float fTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		Module nextTube(TUBE_SYMBOL, { fTubeInnerRadius, fTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+		Module rotate(ROTATE_CW_SYMBOL, { 2 * XM_PI / fBoxCount * (fBoxIterator + 1) });
+		Module box(BOX_SYMBOL, { fBoxWidth, fBoxHeight });
+
+		return { nextTube, rotate, box };
+	};
+
+	SuccessorFunction TubeRule2Successor = [this](Module tube) -> Word
+	{
+		float fTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		Module nextTube(TUBE_SYMBOL, { fTubeInnerRadius, fTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+		Module translate(TRANSLATE_UP_SYMBOL, { fTubeOuterRadius + (fBoxHeight / 2) - 0.2f });
+		Module box(BOX_SYMBOL, { fBoxWidth, fBoxHeight });
+
+		return { nextTube, translate, box };
+	};
+
+	SuccessorFunction TubeRule3Successor1 = [this](Module tube) -> Word
+	{
+		float fTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		Module nextTube(TUBE_SYMBOL, { fTubeInnerRadius, fTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { nextTube };
+	};
+
+	//                                                 ->  C(r2/3, round(b/2), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+	//                                                 ->  C(r2/4, round(b/2), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+	//                                                 ->  C(r2/3, round(b/4), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+	//                                                 ->  C(r2/4, round(b/4), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+
+	SuccessorFunction TubeRule3Successor2 = [this](Module tube) -> Word
+	{
+		float fTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		float fCylinderRadius = fTubeOuterRadius / 3;
+		float fSpokeCount = max(roundf(fBoxCount / 2), MIN_SPOKE_COUNT);
+
+		Module cylinder(CYLINDER_SYMBOL, { fCylinderRadius, fSpokeCount, 0, fBoxWidth/2, fTubeInnerRadius - fCylinderRadius + 0.5f });
+		Module origin(ORIGIN_SYMBOL, {});
+		Module nextTube(TUBE_SYMBOL, { fTubeInnerRadius, fTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { cylinder, origin, nextTube };
+	};
+
+	SuccessorFunction TubeRule3Successor3 = [this](Module tube) -> Word
+	{
+		float fTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		float fCylinderRadius = fTubeOuterRadius / 4;
+		float fSpokeCount = max(roundf(fBoxCount / 2), MIN_SPOKE_COUNT);
+
+		Module cylinder(CYLINDER_SYMBOL, { fCylinderRadius, fSpokeCount, 0, fBoxWidth / 2, fTubeInnerRadius - fCylinderRadius + 0.5f });
+		Module origin(ORIGIN_SYMBOL, {});
+		Module nextTube(TUBE_SYMBOL, { fTubeInnerRadius, fTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { cylinder, origin, nextTube };
+	};
+
+	SuccessorFunction TubeRule3Successor4 = [this](Module tube) -> Word
+	{
+		float fTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		float fCylinderRadius = fTubeOuterRadius / 3;
+		float fSpokeCount = max(roundf(fBoxCount / 4), MIN_SPOKE_COUNT);
+
+		Module cylinder(CYLINDER_SYMBOL, { fCylinderRadius, fSpokeCount, 0, fBoxWidth / 2, fTubeInnerRadius - fCylinderRadius + 0.5f });
+		Module origin(ORIGIN_SYMBOL, {});
+		Module nextTube(TUBE_SYMBOL, { fTubeInnerRadius, fTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { cylinder, origin, nextTube };
+	};
+
+	SuccessorFunction TubeRule3Successor5 = [this](Module tube) -> Word
+	{
+		float fTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		float fCylinderRadius = fTubeOuterRadius / 4;
+		float fSpokeCount = max(roundf(fBoxCount / 4), MIN_SPOKE_COUNT);
+
+		Module cylinder(CYLINDER_SYMBOL, { fCylinderRadius, fSpokeCount, 0, fBoxWidth / 2, fTubeInnerRadius - fCylinderRadius + 0.5f });
+		Module origin(ORIGIN_SYMBOL, {});
+		Module nextTube(TUBE_SYMBOL, { fTubeInnerRadius, fTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { cylinder, origin, nextTube };
+	};
+
+	//                                                 ->  T(r2/3*0.5, r2/3, round(b/2), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+	//                                                 ->  T(r2/3*0.667, r2/3, round(b/2), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+	//                                                 ->  T(r2/3*0.334, r2/3, round(b/2), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+
+	SuccessorFunction TubeRule3Successor6 = [this](Module tube) -> Word
+	{
+		float fNextTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fNextTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		float fSmallTubeOuterRadius = fNextTubeOuterRadius / 3;
+		float fSmallTubeInnerRadius = fSmallTubeOuterRadius * 0.5f;
+		float fSpokeCount = max(roundf(fBoxCount / 2), MIN_SPOKE_COUNT);
+
+		Module smallTube(TUBE_SYMBOL, { fSmallTubeInnerRadius, fSmallTubeOuterRadius, fSpokeCount, 0, fBoxWidth / 2, fNextTubeInnerRadius - fSmallTubeOuterRadius + 0.5f });
+		Module origin(ORIGIN_SYMBOL, {});
+		Module nextTube(TUBE_SYMBOL, { fNextTubeInnerRadius, fNextTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { smallTube, origin, nextTube };
+	};
+
+	SuccessorFunction TubeRule3Successor7 = [this](Module tube) -> Word
+	{
+		float fNextTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fNextTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		float fSmallTubeOuterRadius = fNextTubeOuterRadius / 3;
+		float fSmallTubeInnerRadius = fSmallTubeOuterRadius * 0.667f;
+		float fSpokeCount = max(roundf(fBoxCount / 2), MIN_SPOKE_COUNT);
+
+		Module smallTube(TUBE_SYMBOL, { fSmallTubeInnerRadius, fSmallTubeOuterRadius, fSpokeCount, 0, fBoxWidth / 2, fNextTubeInnerRadius - fSmallTubeOuterRadius + 0.5f });
+		Module origin(ORIGIN_SYMBOL, {});
+		Module nextTube(TUBE_SYMBOL, { fNextTubeInnerRadius, fNextTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { smallTube, origin, nextTube };
+	};
+
+	SuccessorFunction TubeRule3Successor8 = [this](Module tube) -> Word
+	{
+		float fNextTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fNextTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		float fSmallTubeOuterRadius = fNextTubeOuterRadius / 3;
+		float fSmallTubeInnerRadius = fSmallTubeOuterRadius * 0.334f;
+		float fSpokeCount = max(roundf(fBoxCount / 2), MIN_SPOKE_COUNT);
+
+		Module smallTube(TUBE_SYMBOL, { fSmallTubeInnerRadius, fSmallTubeOuterRadius, fSpokeCount, 0, fBoxWidth / 2, fNextTubeInnerRadius - fSmallTubeOuterRadius + 0.5f });
+		Module origin(ORIGIN_SYMBOL, {});
+		Module nextTube(TUBE_SYMBOL, { fNextTubeInnerRadius, fNextTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { smallTube, origin, nextTube };
+	};
+
+	//                                                 ->  T(r2/4*0.5, r2/4, round(b/2), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+	//                                                 ->  T(r2/4*0.667, r2/4, round(b/2), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+	//                                                 ->  T(r2/4*0.334, r2/4, round(b/2), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+
+	SuccessorFunction TubeRule3Successor9 = [this](Module tube) -> Word
+	{
+		float fNextTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fNextTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		float fSmallTubeOuterRadius = fNextTubeOuterRadius / 4;
+		float fSmallTubeInnerRadius = fSmallTubeOuterRadius * 0.5f;
+		float fSpokeCount = max(roundf(fBoxCount / 2), MIN_SPOKE_COUNT);
+
+		Module smallTube(TUBE_SYMBOL, { fSmallTubeInnerRadius, fSmallTubeOuterRadius, fSpokeCount, 0, fBoxWidth / 2, fNextTubeInnerRadius - fSmallTubeOuterRadius + 0.5f });
+		Module origin(ORIGIN_SYMBOL, {});
+		Module nextTube(TUBE_SYMBOL, { fNextTubeInnerRadius, fNextTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { smallTube, origin, nextTube };
+	};
+
+	SuccessorFunction TubeRule3Successor10 = [this](Module tube) -> Word
+	{
+		float fNextTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fNextTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		float fSmallTubeOuterRadius = fNextTubeOuterRadius / 4;
+		float fSmallTubeInnerRadius = fSmallTubeOuterRadius * 0.667f;
+		float fSpokeCount = max(roundf(fBoxCount / 2), MIN_SPOKE_COUNT);
+
+		Module smallTube(TUBE_SYMBOL, { fSmallTubeInnerRadius, fSmallTubeOuterRadius, fSpokeCount, 0, fBoxWidth / 2, fNextTubeInnerRadius - fSmallTubeOuterRadius + 0.5f });
+		Module origin(ORIGIN_SYMBOL, {});
+		Module nextTube(TUBE_SYMBOL, { fNextTubeInnerRadius, fNextTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { smallTube, origin, nextTube };
+	};
+
+	SuccessorFunction TubeRule3Successor11 = [this](Module tube) -> Word
+	{
+		float fNextTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fNextTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		float fSmallTubeOuterRadius = fNextTubeOuterRadius / 4;
+		float fSmallTubeInnerRadius = fSmallTubeOuterRadius * 0.334f;
+		float fSpokeCount = max(roundf(fBoxCount / 2), MIN_SPOKE_COUNT);
+
+		Module smallTube(TUBE_SYMBOL, { fSmallTubeInnerRadius, fSmallTubeOuterRadius, fSpokeCount, 0, fBoxWidth / 2, fNextTubeInnerRadius - fSmallTubeOuterRadius + 0.5f });
+		Module origin(ORIGIN_SYMBOL, {});
+		Module nextTube(TUBE_SYMBOL, { fNextTubeInnerRadius, fNextTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { smallTube, origin, nextTube };
+	};
+
+	//                                                 ->  T(r2/3*0.5, r2/3, round(b/4), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+	//                                                 ->  T(r2/3*0.667, r2/3, round(b/4), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+	//                                                 ->  T(r2/3*0.334, r2/3, round(b/4), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+
+	SuccessorFunction TubeRule3Successor12 = [this](Module tube) -> Word
+	{
+		float fNextTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fNextTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		float fSmallTubeOuterRadius = fNextTubeOuterRadius / 3;
+		float fSmallTubeInnerRadius = fSmallTubeOuterRadius * 0.5f;
+		float fSpokeCount = max(roundf(fBoxCount / 4), MIN_SPOKE_COUNT);
+
+		Module smallTube(TUBE_SYMBOL, { fSmallTubeInnerRadius, fSmallTubeOuterRadius, fSpokeCount, 0, fBoxWidth / 2, fNextTubeInnerRadius - fSmallTubeOuterRadius + 0.5f });
+		Module origin(ORIGIN_SYMBOL, {});
+		Module nextTube(TUBE_SYMBOL, { fNextTubeInnerRadius, fNextTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { smallTube, origin, nextTube };
+	};
+
+	SuccessorFunction TubeRule3Successor13 = [this](Module tube) -> Word
+	{
+		float fNextTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fNextTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		float fSmallTubeOuterRadius = fNextTubeOuterRadius / 3;
+		float fSmallTubeInnerRadius = fSmallTubeOuterRadius * 0.667f;
+		float fSpokeCount = max(roundf(fBoxCount / 4), MIN_SPOKE_COUNT);
+
+		Module smallTube(TUBE_SYMBOL, { fSmallTubeInnerRadius, fSmallTubeOuterRadius, fSpokeCount, 0, fBoxWidth / 2, fNextTubeInnerRadius - fSmallTubeOuterRadius + 0.5f });
+		Module origin(ORIGIN_SYMBOL, {});
+		Module nextTube(TUBE_SYMBOL, { fNextTubeInnerRadius, fNextTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { smallTube, origin, nextTube };
+	};
+
+	SuccessorFunction TubeRule3Successor14 = [this](Module tube) -> Word
+	{
+		float fNextTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fNextTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		float fSmallTubeOuterRadius = fNextTubeOuterRadius / 3;
+		float fSmallTubeInnerRadius = fSmallTubeOuterRadius * 0.334f;
+		float fSpokeCount = max(roundf(fBoxCount / 4), MIN_SPOKE_COUNT);
+
+		Module smallTube(TUBE_SYMBOL, { fSmallTubeInnerRadius, fSmallTubeOuterRadius, fSpokeCount, 0, fBoxWidth / 2, fNextTubeInnerRadius - fSmallTubeOuterRadius + 0.5f });
+		Module origin(ORIGIN_SYMBOL, {});
+		Module nextTube(TUBE_SYMBOL, { fNextTubeInnerRadius, fNextTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { smallTube, origin, nextTube };
+	};
+
+	//                                                 ->  T(r2/4*0.5, r2/4, round(b/4), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+	//                                                 ->  T(r2/4*0.667, r2/4, round(b/4), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+	//                                                 ->  T(r2/4*0.334, r2/4, round(b/4), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+
+	SuccessorFunction TubeRule3Successor15 = [this](Module tube) -> Word
+	{
+		float fNextTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fNextTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		float fSmallTubeOuterRadius = fNextTubeOuterRadius / 4;
+		float fSmallTubeInnerRadius = fSmallTubeOuterRadius * 0.5f;
+		float fSpokeCount = max(roundf(fBoxCount / 4), MIN_SPOKE_COUNT);
+
+		Module smallTube(TUBE_SYMBOL, { fSmallTubeInnerRadius, fSmallTubeOuterRadius, fSpokeCount, 0, fBoxWidth / 2, fNextTubeInnerRadius - fSmallTubeOuterRadius + 0.5f });
+		Module origin(ORIGIN_SYMBOL, {});
+		Module nextTube(TUBE_SYMBOL, { fNextTubeInnerRadius, fNextTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { smallTube, origin, nextTube };
+	};
+
+	SuccessorFunction TubeRule3Successor16 = [this](Module tube) -> Word
+	{
+		float fNextTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fNextTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		float fSmallTubeOuterRadius = fNextTubeOuterRadius / 4;
+		float fSmallTubeInnerRadius = fSmallTubeOuterRadius * 0.667f;
+		float fSpokeCount = max(roundf(fBoxCount / 4), MIN_SPOKE_COUNT);
+
+		Module smallTube(TUBE_SYMBOL, { fSmallTubeInnerRadius, fSmallTubeOuterRadius, fSpokeCount, 0, fBoxWidth / 2, fNextTubeInnerRadius - fSmallTubeOuterRadius + 0.5f });
+		Module origin(ORIGIN_SYMBOL, {});
+		Module nextTube(TUBE_SYMBOL, { fNextTubeInnerRadius, fNextTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { smallTube, origin, nextTube };
+	};
+
+	SuccessorFunction TubeRule3Successor17 = [this](Module tube) -> Word
+	{
+		float fNextTubeInnerRadius = tube.parameters[TubeParameters::TubeInnerRadius];
+		float fNextTubeOuterRadius = tube.parameters[TubeParameters::TubeOuterRadius];
+		float fBoxCount = tube.parameters[TubeParameters::TubeBoxCount];
+		float fBoxIterator = tube.parameters[TubeParameters::TubeBoxIterator];
+		float fBoxWidth = tube.parameters[TubeParameters::TubeBoxWidth];
+		float fBoxHeight = tube.parameters[TubeParameters::TubeBoxHeight];
+
+		float fSmallTubeOuterRadius = fNextTubeOuterRadius / 4;
+		float fSmallTubeInnerRadius = fSmallTubeOuterRadius * 0.334f;
+		float fSpokeCount = max(roundf(fBoxCount / 4), MIN_SPOKE_COUNT);
+
+		Module smallTube(TUBE_SYMBOL, { fSmallTubeInnerRadius, fSmallTubeOuterRadius, fSpokeCount, 0, fBoxWidth / 2, fNextTubeInnerRadius - fSmallTubeOuterRadius + 0.5f });
+		Module origin(ORIGIN_SYMBOL, {});
+		Module nextTube(TUBE_SYMBOL, { fNextTubeInnerRadius, fNextTubeOuterRadius, fBoxCount, fBoxIterator + 1, fBoxWidth, fBoxHeight });
+
+		return { smallTube, origin, nextTube };
+	};
+
+	Rule tubeRule1(BoxCountGreaterThanOne, { TubeRule1Successor });
+	Rule tubeRule2(BoxCountEqualToOne, { TubeRule2Successor });
+	Rule tubeRule3(BoxCountEqualToZero, { TubeRule3Successor1, TubeRule3Successor2, TubeRule3Successor3, TubeRule3Successor4,
+										  TubeRule3Successor5, TubeRule3Successor6, TubeRule3Successor7, TubeRule3Successor8,
+										  TubeRule3Successor9 , TubeRule3Successor10 , TubeRule3Successor11,
+										  TubeRule3Successor12 , TubeRule3Successor13 , TubeRule3Successor14,
+										  TubeRule3Successor15 , TubeRule3Successor16 , TubeRule3Successor17 });
 
 	std::vector<Rule> tubeRules;
-	tubeRules.push_back(rule3);
-	tubeRules.push_back(rule4);
-	tubeRules.push_back(rule5);
+	tubeRules.push_back(tubeRule1);
+	tubeRules.push_back(tubeRule2);
+	tubeRules.push_back(tubeRule3);
 
 	m_rules[TUBE_SYMBOL] = tubeRules;
 }
@@ -158,7 +549,8 @@ Word LSystem::ApplyRule(Module module)
 	}
 	else if (size > 1)
 	{
-		int index = Utils::GetRandomInt(0, size - 1);
+		Utils utils;
+		int index = utils.GetRandomInt(0, size - 1);
 		SuccessorFunction successorFunction = successorFunctions[index];
 		nextWord = successorFunction(module);
 	}

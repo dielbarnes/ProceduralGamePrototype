@@ -26,26 +26,26 @@
 //   T(r1, r2, b, i, w, h)  :  b > 1               ->  T(r1, r2, b-1, i, w, h) /(360/b*i) B(w, h)
 //                          :  b == 1              ->  T(r1, r2, 0, i, w, h) ^(r + (h/2) - 0.2) B(w, h)
 //                          :  b == 0, r1 >= 1.25  ->  T(r1, r2, 0, i, w, h)
-//                                                 ->  C(r2/3, round(b/2), i, w/2, r1 - r) T(r1, r2, 0, w, h)
-//                                                 ->  C(r2/4, round(b/2), i, w/2, r1 - r) T(r1, r2, 0, w, h)
-//                                                 ->  C(r2/3, round(b/4), i, w/2, r1 - r) T(r1, r2, 0, w, h)
-//                                                 ->  C(r2/4, round(b/4), i, w/2, r1 - r) T(r1, r2, 0, w, h)
+//                                                 ->  C(r2/3, round(b/2), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+//                                                 ->  C(r2/4, round(b/2), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+//                                                 ->  C(r2/3, round(b/4), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+//                                                 ->  C(r2/4, round(b/4), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
 //
-//                                                 ->  T(r2/3*0.5, r2/3, round(b/2), i, w/2, r1 - r) T(r1, r2, 0, w, h)
-//                                                 ->  T(r2/3*0.667, r2/3, round(b/2), i, w/2, r1 - r) T(r1, r2, 0, w, h)
-//                                                 ->  T(r2/3*0.334, r2/3, round(b/2), i, w/2, r1 - r) T(r1, r2, 0, w, h)
+//                                                 ->  T(r2/3*0.5, r2/3, round(b/2), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+//                                                 ->  T(r2/3*0.667, r2/3, round(b/2), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+//                                                 ->  T(r2/3*0.334, r2/3, round(b/2), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
 //
-//                                                 ->  T(r2/4*0.5, r2/4, round(b/2), i, w/2, r1 - r) T(r1, r2, 0, w, h)
-//                                                 ->  T(r2/4*0.667, r2/4, round(b/2), i, w/2, r1 - r) T(r1, r2, 0, w, h)
-//                                                 ->  T(r2/4*0.334, r2/4, round(b/2), i, w/2, r1 - r) T(r1, r2, 0, w, h)
+//                                                 ->  T(r2/4*0.5, r2/4, round(b/2), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+//                                                 ->  T(r2/4*0.667, r2/4, round(b/2), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+//                                                 ->  T(r2/4*0.334, r2/4, round(b/2), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
 //
-//                                                 ->  T(r2/3*0.5, r2/3, round(b/4), i, w/2, r1 - r) T(r1, r2, 0, w, h)
-//                                                 ->  T(r2/3*0.667, r2/3, round(b/4), i, w/2, r1 - r) T(r1, r2, 0, w, h)
-//                                                 ->  T(r2/3*0.334, r2/3, round(b/4), i, w/2, r1 - r) T(r1, r2, 0, w, h)
+//                                                 ->  T(r2/3*0.5, r2/3, round(b/4), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+//                                                 ->  T(r2/3*0.667, r2/3, round(b/4), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+//                                                 ->  T(r2/3*0.334, r2/3, round(b/4), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
 //
-//                                                 ->  T(r2/4*0.5, r2/4, round(b/4), i, w/2, r1 - r) T(r1, r2, 0, w, h)
-//                                                 ->  T(r2/4*0.667, r2/4, round(b/4), i, w/2, r1 - r) T(r1, r2, 0, w, h)
-//                                                 ->  T(r2/4*0.334, r2/4, round(b/4), i, w/2, r1 - r) T(r1, r2, 0, w, h)
+//                                                 ->  T(r2/4*0.5, r2/4, round(b/4), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+//                                                 ->  T(r2/4*0.667, r2/4, round(b/4), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
+//                                                 ->  T(r2/4*0.334, r2/4, round(b/4), i, w/2, r1 - r) o T(r1, r2, 0, w, h)
 
 #pragma once
 
@@ -64,7 +64,8 @@
 
 #define COGWHEEL_THICKNESS 0.5f
 #define SUBDIVISION_COUNT 24
-#define MIN_RADIUS_TO_SPAWN 1.25f
+#define MIN_RADIUS_TO_SPAWN 1.5f
+#define MIN_SPOKE_COUNT 3.0f
 #define COGWHEEL_ROTATION_MATRIX XMMatrixRotationRollPitchYaw(XM_PI * 0.5f, XM_PI * 0.0f, XM_PI * 0.0f)
 
 enum CylinderParameters : int

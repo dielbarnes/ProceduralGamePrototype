@@ -263,7 +263,7 @@ HRESULT Model::Create1x1ColorTexture(ID3D11Device *pDevice, unsigned char color[
 
 void Model::GenerateCogwheel()
 {
-	// 3.0f outer radius: 5 - 11 teeth
+	// 3.0f outer radius: 6 - 11 teeth
 
 	float fOuterRadius1 = 3.0f;
 	float fInnerRadius1 = 2.0f;

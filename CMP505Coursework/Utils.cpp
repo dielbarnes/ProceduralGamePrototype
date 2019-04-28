@@ -51,8 +51,6 @@ std::mt19937_64 Utils::randomNumberEngine(randomDevice());
 
 int Utils::GetRandomInt(int iMin, int iMax)
 {
-	//dist = std::uniform_int_distribution<int>(iMin, iMax);
-	//return dist(randomNumberEngine);
-
-	return 0;
+	dist = std::uniform_int_distribution<int>(iMin, iMax);
+	return dist(randomNumberEngine);
 }

@@ -23,10 +23,10 @@ public:
 	static void ShowError(LPCTSTR message, HRESULT result);
 	static std::string GetDirectoryFromPath(std::string strFilePath);
 	static std::string GetFileExtension(std::string strFilename);
-	static int GetRandomInt(int iMin, int iMax);
+	int GetRandomInt(int iMin, int iMax);
 
 private:
 	static std::random_device randomDevice;
 	static std::mt19937_64 randomNumberEngine;
-	static std::uniform_int_distribution<int> dist;
+	std::uniform_int_distribution<int> dist;
 };

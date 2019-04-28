@@ -289,7 +289,8 @@ bool ResourceManager::LoadResources()
 	Model *pModel = new Model(m_pDevice, m_pImmediateContext, m_pDefaultTexture);
 	//pModel->GenerateCogwheel();
 
-	Module module(CYLINDER_SYMBOL, { 3.0f, 11, 0, 1.0f, 1.0f });
+	//Module module(CYLINDER_SYMBOL, { 3.0f, 11, 0, 1.0f, 1.0f });
+	Module module(TUBE_SYMBOL, { 2.0f, 3.0f, 11, 0, 1.0f, 1.0f });
 	Word axiom = { module };
 	m_pLSystem->GenerateModel(axiom, pModel);
 
