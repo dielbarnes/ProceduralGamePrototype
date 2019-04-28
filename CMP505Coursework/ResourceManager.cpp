@@ -12,6 +12,8 @@ ResourceManager::ResourceManager(ID3D11Device *pDevice, ID3D11DeviceContext *pIm
 	m_pDevice = pDevice;
 	m_pImmediateContext = pImmediateContext;
 	m_pLSystem = new LSystem();
+	bShouldRotateLeftCogwheels = false;
+	bShouldRotateRightCogwheels = false;
 
 	unsigned char color[] = { 200, 200, 220, 255 };
 	Model::Create1x1ColorTexture(m_pDevice, color, &m_pDefaultTexture);
@@ -286,7 +288,7 @@ bool ResourceManager::LoadResources()
 
 	// Cogwheels
 
-	m_cogwheelToothCount = { 17.0f, 14.0f, 10.0f, 6.0f, 8.0f };
+	m_cogwheelToothCount = { 17.0f, 14.0f, 10.0f, 6.0f, 8.0f, 17.0f, 14.0f, 10.0f, 6.0f, 8.0f };
 	int iCogwheelCount = static_cast<int>(m_cogwheelToothCount.size());
 
 	m_cogwheelRadii = { 5.0f };
@@ -314,6 +316,13 @@ bool ResourceManager::LoadResources()
 			fRadius = m_cogwheelRadii[1] / fRatio;
 			break;
 		}
+		case 5:
+		case 6:
+		case 7:
+		case 8:
+		case 9:
+			fRadius = m_cogwheelRadii[i-5];
+			break;
 		}
 		m_cogwheelRadii.push_back(fRadius);
 	}
@@ -342,6 +351,21 @@ bool ResourceManager::LoadResources()
 			break;
 		case 4:
 			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { m_cogwheelRadii[i] - 0.5f, m_cogwheelRadii[i], m_cogwheelToothCount[i], 0.0f, COGWHEEL_TOOTH_SIZE, COGWHEEL_TOOTH_SIZE }) }, pModel);
+			break;
+		case 5:
+			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { m_cogwheelRadii[i] - 2.2f, m_cogwheelRadii[i], m_cogwheelToothCount[i], 0.0f, COGWHEEL_TOOTH_SIZE, COGWHEEL_TOOTH_SIZE }) }, pModel);
+			break;
+		case 6:
+			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { m_cogwheelRadii[i] - 0.75f, m_cogwheelRadii[i], m_cogwheelToothCount[i], 0.0f, COGWHEEL_TOOTH_SIZE, COGWHEEL_TOOTH_SIZE }) }, pModel);
+			break;
+		case 7:
+			m_pLSystem->GenerateModel({ Module(CYLINDER_SYMBOL, { m_cogwheelRadii[i], m_cogwheelToothCount[i], 0.0f, COGWHEEL_TOOTH_SIZE, COGWHEEL_TOOTH_SIZE }) }, pModel);
+			break;
+		case 8:
+			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { m_cogwheelRadii[i] - 0.8f, m_cogwheelRadii[i], m_cogwheelToothCount[i], 0.0f, COGWHEEL_TOOTH_SIZE, COGWHEEL_TOOTH_SIZE }) }, pModel);
+			break;
+		case 9:
+			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { m_cogwheelRadii[i] - 0.85f, m_cogwheelRadii[i], m_cogwheelToothCount[i], 0.0f, COGWHEEL_TOOTH_SIZE, COGWHEEL_TOOTH_SIZE }) }, pModel);
 			break;
 		}
 	}
@@ -501,7 +525,7 @@ bool ResourceManager::LoadModel(ModelResource resource, int iInstanceCount, Inst
 
 #pragma endregion
 
-#pragma region Getters
+#pragma region Setters/Getters
 
 ID3D11ShaderResourceView* ResourceManager::GetTexture(DdsTextureResource resource)
 {
@@ -516,6 +540,16 @@ TxtModel* ResourceManager::GetModel(TxtModelResource resource)
 SkyDome* ResourceManager::GetSkyDome()
 {
 	return m_pSkyDome;
+}
+
+void ResourceManager::SetShouldRotateLeftCogwheels(bool bShouldRotate)
+{
+	bShouldRotateLeftCogwheels = bShouldRotate;
+}
+
+void ResourceManager::SetShouldRotateRightCogwheels(bool bShouldRotate)
+{
+	bShouldRotateRightCogwheels = bShouldRotate;
 }
 
 #pragma endregion
@@ -585,6 +619,33 @@ bool ResourceManager::RenderCogwheels(Camera *pCamera, LightShader *pLightShader
 			vCenter = positions[1] + ((m_cogwheelRadii[1] + m_cogwheelRadii[i] + COGWHEEL_TOOTH_SIZE - 0.1f) * XMVector3Normalize(vDirection));
 			break;
 		}
+		case 5:
+			vCenter = XMVectorSet(8.0f, 5.0f, 10.0f, 0.0f);
+			break;
+		case 6:
+		{
+			XMVECTOR vDirection = XMVectorSet(2.0f, 1.0f, 0.0f, 0.0f);
+			vCenter = positions[5] + ((m_cogwheelRadii[5] + m_cogwheelRadii[i] + COGWHEEL_TOOTH_SIZE - 0.1f) * XMVector3Normalize(vDirection));
+			break;
+		}
+		case 7:
+		{
+			XMVECTOR vDirection = XMVectorSet(1.0f, -0.6f, 0.0f, 0.0f);
+			vCenter = positions[5] + ((m_cogwheelRadii[5] + m_cogwheelRadii[i] + COGWHEEL_TOOTH_SIZE - 0.08f) * XMVector3Normalize(vDirection));
+			break;
+		}
+		case 8:
+		{
+			XMVECTOR vDirection = XMVectorSet(1.0f, 0.1f, 0.0f, 0.0f);
+			vCenter = positions[7] + ((m_cogwheelRadii[7] + m_cogwheelRadii[i] + COGWHEEL_TOOTH_SIZE - 0.1f) * XMVector3Normalize(vDirection));
+			break;
+		}
+		case 9:
+		{
+			XMVECTOR vDirection = XMVectorSet(1.0f, -0.5f, 0.0f, 0.0f);
+			vCenter = positions[6] + ((m_cogwheelRadii[6] + m_cogwheelRadii[i] + COGWHEEL_TOOTH_SIZE - 0.1f) * XMVector3Normalize(vDirection));
+			break;
+		}
 		}
 		positions.push_back(vCenter);
 	}
@@ -597,27 +658,63 @@ bool ResourceManager::RenderCogwheels(Camera *pCamera, LightShader *pLightShader
 		switch (j)
 		{
 		case 0: 
-			fRotationZ = fRotation;
+			if (bShouldRotateLeftCogwheels) fRotationZ = fRotation;
 			break; 
 		case 1:
-			fRotationZ = -fRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[j]);
+			if (bShouldRotateLeftCogwheels) fRotationZ = -fRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[j]);
 			break;
 		case 2:
 			fRotationZ = (XM_PI / m_cogwheelToothCount[j]) + 0.05f;
-			fRotationZ += -fRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[j]);
+			if (bShouldRotateLeftCogwheels) fRotationZ += -fRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[j]);
 			break;
 		case 3:
 		{
-			float fDriverRotation = (XM_PI / m_cogwheelToothCount[2]) + fRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[2]);
 			fRotationZ = XM_PI / m_cogwheelToothCount[j] / 2;
-			fRotationZ += (fDriverRotation - 0.05f) * (m_cogwheelRadii[2] / m_cogwheelRadii[j]);
+			if (bShouldRotateLeftCogwheels)
+			{
+				float fDriverRotation = (XM_PI / m_cogwheelToothCount[2]) + fRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[2]);
+				fRotationZ += (fDriverRotation - 0.05f) * (m_cogwheelRadii[2] / m_cogwheelRadii[j]);
+			}
 			break;
 		}
 		case 4:
 		{
-			float fDriverRotation = fRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[1]);
 			fRotationZ = (XM_PI / m_cogwheelToothCount[j]) + 0.08f;
-			fRotationZ += fDriverRotation * (m_cogwheelRadii[1] / m_cogwheelRadii[j]);
+			if (bShouldRotateLeftCogwheels)
+			{
+				float fDriverRotation = fRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[1]);
+				fRotationZ += fDriverRotation * (m_cogwheelRadii[1] / m_cogwheelRadii[j]);
+			}
+			break;
+		}
+		case 5:
+			if (bShouldRotateRightCogwheels) fRotationZ = -fRotation;
+			break;
+		case 6:
+			if (bShouldRotateRightCogwheels) fRotationZ = fRotation * (m_cogwheelRadii[5] / m_cogwheelRadii[j]);
+			break;
+		case 7:
+			fRotationZ = (XM_PI / m_cogwheelToothCount[j]) - 0.05f;
+			if (bShouldRotateRightCogwheels) fRotationZ += fRotation * (m_cogwheelRadii[5] / m_cogwheelRadii[j]);
+			break;
+		case 8:
+		{
+			fRotationZ = XM_PI / m_cogwheelToothCount[j] / -2;
+			if (bShouldRotateRightCogwheels)
+			{
+				float fDriverRotation = (XM_PI / m_cogwheelToothCount[7]) + -fRotation * (m_cogwheelRadii[5] / m_cogwheelRadii[7]);
+				fRotationZ += (fDriverRotation + 0.05f) * (m_cogwheelRadii[7] / m_cogwheelRadii[j]);
+			}
+			break;
+		}
+		case 9:
+		{
+			fRotationZ = (XM_PI / m_cogwheelToothCount[j]) - 0.08f;
+			if (bShouldRotateRightCogwheels)
+			{
+				float fDriverRotation = -fRotation * (m_cogwheelRadii[5] / m_cogwheelRadii[6]);
+				fRotationZ += fDriverRotation * (m_cogwheelRadii[6] / m_cogwheelRadii[j]);
+			}
 			break;
 		}
 		}

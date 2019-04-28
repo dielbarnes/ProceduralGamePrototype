@@ -383,6 +383,12 @@ void Graphics::HandleKeyboardInput(float fDeltaTime)
 	{
 		m_pCamera->Rotate(0.0f, fDeltaTime * 0.002f);
 	}
+
+	if (GetAsyncKeyState('I') & 0x8000)
+	{
+		m_pResourceManager->SetShouldRotateLeftCogwheels(true);
+		m_pResourceManager->SetShouldRotateRightCogwheels(true);
+	}
 }
 
 void Graphics::OnMouseDown(int x, int y, HWND hWindow)
