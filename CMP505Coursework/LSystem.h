@@ -96,7 +96,7 @@ enum BoxParameters : int
 struct Module
 {
 	char symbol;
-	std::vector<float> parameters;
+	std::vector<float> parameters; // Should be the same order as the enums
 
 	Module() {}
 
@@ -119,10 +119,10 @@ struct Rule
 
 	Rule() {}
 
-	Rule(ConditionFunction func, std::vector<SuccessorFunction> words)
+	Rule(ConditionFunction condFunc, std::vector<SuccessorFunction> successorFuncs)
 	{
-		conditionFunction = func;
-		successorFunctions = words;
+		conditionFunction = condFunc;
+		successorFunctions = successorFuncs;
 	}
 };
 

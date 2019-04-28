@@ -33,7 +33,7 @@ void LSystem::AddRules()
 		return args[0] == 0 && args[1] > MIN_RADIUS_TO_SPAWN;
 	};
 
-	// Successor functions
+	// Cylinder rules
 
 	//   C(r, b, i, w, h)       :  b > 1               ->  C(r, b-1, i, w, h) /(360/b*i) B(w, h)
 	//                          :  b == 1              ->  C(r, 0, i, w, h) ^(r + (h/2) - 0.2) B(w, h)

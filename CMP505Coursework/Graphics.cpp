@@ -28,6 +28,7 @@ Graphics::Graphics()
 	m_pPostProcessQuad = nullptr;
 	m_pBloom = nullptr;
 	fTotalTime = 0.0f;
+	fCogwheelRotation = 0.0f;
 }
 
 Graphics::~Graphics()
@@ -448,7 +449,8 @@ bool Graphics::Render(const float fDeltaTime)
 		return false;
 	}
 
-	if (!m_pResourceManager->RenderCogwheels(m_pCamera, m_pShaderManager->GetLightShader()))
+	fCogwheelRotation += XM_PI * 0.001f;
+	if (!m_pResourceManager->RenderCogwheels(m_pCamera, m_pShaderManager->GetLightShader(), fCogwheelRotation))
 	{
 		return false;
 	}

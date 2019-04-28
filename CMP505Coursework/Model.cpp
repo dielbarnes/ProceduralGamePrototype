@@ -16,6 +16,7 @@ Model::Model(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext, ID3D
 	m_pImmediateContext = pImmediateContext;
 	m_pDefaultTexture = pDefaultTexture;
 	m_iInstanceCount = 1;
+	m_worldMatrix = XMMatrixIdentity();
 	m_ambientColor = COLOR_XMF4(51.0f, 51.0f, 51.0f, 1.0f); // Ambient should not be too bright otherwise the scene will appear overexposed and washed-out
 	m_diffuseColor = COLOR_XMF4(180.0f, 100.0f, 255.0f, 1.0f);
 
@@ -263,7 +264,7 @@ HRESULT Model::Create1x1ColorTexture(ID3D11Device *pDevice, unsigned char color[
 
 void Model::GenerateCogwheel()
 {
-	// 3.0f outer radius: 6 - 11 teeth
+	// 3.0f outer radius: 5 - 11 teeth
 
 	float fOuterRadius1 = 3.0f;
 	float fInnerRadius1 = 2.0f;
@@ -499,10 +500,16 @@ int Model::GetInstanceCount()
 
 void Model::SetWorldMatrix(XMMATRIX worldMatrix)
 {
+	m_worldMatrix = worldMatrix;
 	for (auto mesh : m_meshes)
 	{
 		mesh->SetWorldMatrix(worldMatrix);
 	}
+}
+
+XMMATRIX Model::GetWorldMatrix()
+{
+	return m_worldMatrix;
 }
 
 XMFLOAT4 Model::GetAmbientColor()

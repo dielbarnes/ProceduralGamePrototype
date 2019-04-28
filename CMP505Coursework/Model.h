@@ -29,6 +29,7 @@ public:
 	std::vector<Mesh*> GetMeshes();
 	int GetInstanceCount();
 	void SetWorldMatrix(XMMATRIX worldMatrix);
+	XMMATRIX GetWorldMatrix();
 	XMFLOAT4 GetAmbientColor();
 	XMFLOAT4 GetDiffuseColor();
 	XMFLOAT4 GetSpecularColor();
@@ -57,6 +58,7 @@ private:
 	std::string m_strDirectory;
 	std::vector<Mesh*> m_meshes;
 	int m_iInstanceCount;
+	XMMATRIX m_worldMatrix;
 	XMFLOAT4 m_ambientColor;
 	XMFLOAT4 m_diffuseColor;
 	XMFLOAT4 m_specularColor;

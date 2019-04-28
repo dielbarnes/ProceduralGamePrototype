@@ -53,6 +53,7 @@ private:
 	PostProcessQuad *m_pPostProcessQuad;
 	Bloom *m_pBloom;
 	float fTotalTime;
+	float fCogwheelRotation;
 
 	HRESULT InitDirect3D(int iWindowWidth, int iWindowHeight, HWND hWindow);
 	void HandleKeyboardInput(float fDeltaTime);

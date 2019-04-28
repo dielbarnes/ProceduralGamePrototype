@@ -286,9 +286,39 @@ bool ResourceManager::LoadResources()
 
 	// Cogwheels
 
-	float fPositionZ = 10.0f;
+	m_cogwheelToothCount = { 17.0f, 14.0f, 10.0f, 6.0f, 8.0f };
+	int iCogwheelCount = static_cast<int>(m_cogwheelToothCount.size());
 
-	for (int i = 0; i < 6; i++)
+	m_cogwheelRadii = { 5.0f };
+	for (int i = 1; i < iCogwheelCount; i++)
+	{
+		float fRadius = 0.0f;
+		switch (i)
+		{
+		case 1:
+		case 2:
+		{
+			float fRatio = m_cogwheelToothCount[0] / m_cogwheelToothCount[i];
+			fRadius = m_cogwheelRadii[0] / fRatio;
+			break;
+		}
+		case 3:
+		{
+			float fRatio = m_cogwheelToothCount[2] / m_cogwheelToothCount[i];
+			fRadius = m_cogwheelRadii[2] / fRatio;
+			break;
+		}
+		case 4:
+		{
+			float fRatio = m_cogwheelToothCount[1] / m_cogwheelToothCount[i];
+			fRadius = m_cogwheelRadii[1] / fRatio;
+			break;
+		}
+		}
+		m_cogwheelRadii.push_back(fRadius);
+	}
+
+	for (int i = 0; i < iCogwheelCount; i++)
 	{
 		Model *pModel = new Model(m_pDevice, m_pImmediateContext, m_pDefaultTexture);
 		//pModel->GenerateCogwheel();
@@ -299,28 +329,19 @@ bool ResourceManager::LoadResources()
 		switch (i)
 		{
 		case 0:
-			m_pLSystem->GenerateModel({ Module(CYLINDER_SYMBOL, { 1.5f, 7, 0, 0.7f, 0.7f }) }, pModel);
-			pModel->SetWorldMatrix(XMMatrixTranslation(-22.5f, 5.4f, fPositionZ));
+			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { m_cogwheelRadii[i] - 1.5f, m_cogwheelRadii[i], m_cogwheelToothCount[i], 0.0f, COGWHEEL_TOOTH_SIZE, COGWHEEL_TOOTH_SIZE }) }, pModel);
 			break;
 		case 1:
-			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { 2.0f, 3.0f, 11, 0, 0.85f, 0.85f }) }, pModel);
-			pModel->SetWorldMatrix(XMMatrixTranslation(-17.1f, 4.5f, fPositionZ));
+			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { m_cogwheelRadii[i] - 3.0f, m_cogwheelRadii[i], m_cogwheelToothCount[i], 0.0f, COGWHEEL_TOOTH_SIZE, COGWHEEL_TOOTH_SIZE }) }, pModel);
 			break;
 		case 2:
-			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { 3.5f, 5.0f, 16, 0, 0.9f, 0.9f }) }, pModel);
-			pModel->SetWorldMatrix(XMMatrixTranslation(-8.0f, 5.0f, fPositionZ));
+			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { m_cogwheelRadii[i] - 1.0f, m_cogwheelRadii[i], m_cogwheelToothCount[i], 0.0f, COGWHEEL_TOOTH_SIZE, COGWHEEL_TOOTH_SIZE }) }, pModel);
 			break;
 		case 3:
-			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { 1.0f, 4.0f, 11, 0, 1.0f, 1.0f }) }, pModel);
-			pModel->SetWorldMatrix(XMMatrixTranslation(-14.6f, 12.8f, fPositionZ));
+			m_pLSystem->GenerateModel({ Module(CYLINDER_SYMBOL, { m_cogwheelRadii[i], m_cogwheelToothCount[i], 0.0f, COGWHEEL_TOOTH_SIZE, COGWHEEL_TOOTH_SIZE }) }, pModel);
 			break;
 		case 4:
-			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { 2.0f, 2.5f, 8, 0, 0.8f, 0.9f }) }, pModel);
-			pModel->SetWorldMatrix(XMMatrixTranslation(-22.0f, 11.0f, fPositionZ));
-			break;
-		case 5:
-			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { 1.55f, 2.1f, 8, 0, 0.6f, 0.6f }) }, pModel);
-			pModel->SetWorldMatrix(XMMatrixTranslation(-26.3f, 7.8f, fPositionZ));
+			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { m_cogwheelRadii[i] - 0.5f, m_cogwheelRadii[i], m_cogwheelToothCount[i], 0.0f, COGWHEEL_TOOTH_SIZE, COGWHEEL_TOOTH_SIZE }) }, pModel);
 			break;
 		}
 	}
@@ -531,11 +552,80 @@ bool ResourceManager::RenderModel(int iModelIndex, Camera *pCamera, LightShader 
 	return true;
 }
 
-bool ResourceManager::RenderCogwheels(Camera *pCamera, LightShader *pLightShader)
+bool ResourceManager::RenderCogwheels(Camera *pCamera, LightShader *pLightShader, float fRotation)
 {
+	int iCogwheelCount = static_cast<int>(m_cogwheelToothCount.size());
+	std::vector<XMVECTOR> positions = { XMVectorSet(-8.0f, 5.0f, 10.0f, 0.0f) };
+	for (int i = 1; i < iCogwheelCount; i++)
+	{
+		XMVECTOR vCenter;
+		switch (i)
+		{
+		case 1:
+		{
+			XMVECTOR vDirection = XMVectorSet(-2.0f, 1.0f, 0.0f, 0.0f);
+			vCenter = positions[0] + ((m_cogwheelRadii[0] + m_cogwheelRadii[i] + COGWHEEL_TOOTH_SIZE - 0.1f) * XMVector3Normalize(vDirection));
+			break;
+		}
+		case 2:
+		{
+			XMVECTOR vDirection = XMVectorSet(-1.0f, -0.6f, 0.0f, 0.0f);
+			vCenter = positions[0] + ((m_cogwheelRadii[0] + m_cogwheelRadii[i] + COGWHEEL_TOOTH_SIZE - 0.1f) * XMVector3Normalize(vDirection));
+			break;
+		}
+		case 3:
+		{
+			XMVECTOR vDirection = XMVectorSet(-1.0f, 0.1f, 0.0f, 0.0f);
+			vCenter = positions[2] + ((m_cogwheelRadii[2] + m_cogwheelRadii[i] + COGWHEEL_TOOTH_SIZE - 0.1f) * XMVector3Normalize(vDirection));
+			break;
+		}
+		case 4:
+		{
+			XMVECTOR vDirection = XMVectorSet(-1.0f, -0.5f, 0.0f, 0.0f);
+			vCenter = positions[1] + ((m_cogwheelRadii[1] + m_cogwheelRadii[i] + COGWHEEL_TOOTH_SIZE - 0.1f) * XMVector3Normalize(vDirection));
+			break;
+		}
+		}
+		positions.push_back(vCenter);
+	}
+
 	int iModelCount = static_cast<int>(m_models.size());
 	for (int i = ModelResource::CogwheelModel; i < iModelCount; i++)
 	{
+		float fRotationZ = 0.0f;
+		int j = i - ModelResource::CogwheelModel;
+		switch (j)
+		{
+		case 0: 
+			fRotationZ = fRotation;
+			break; 
+		case 1:
+			fRotationZ = -fRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[j]);
+			break;
+		case 2:
+			fRotationZ = (XM_PI / m_cogwheelToothCount[j]) + 0.05f;
+			fRotationZ += -fRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[j]);
+			break;
+		case 3:
+		{
+			float fDriverRotation = (XM_PI / m_cogwheelToothCount[2]) + fRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[2]);
+			fRotationZ = XM_PI / m_cogwheelToothCount[j] / 2;
+			fRotationZ += (fDriverRotation - 0.05f) * (m_cogwheelRadii[2] / m_cogwheelRadii[j]);
+			break;
+		}
+		case 4:
+		{
+			float fDriverRotation = fRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[1]);
+			fRotationZ = (XM_PI / m_cogwheelToothCount[j]) + 0.08f;
+			fRotationZ += fDriverRotation * (m_cogwheelRadii[1] / m_cogwheelRadii[j]);
+			break;
+		}
+		}
+
+		XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(0.0f, 0.0f, fRotationZ);
+		XMMATRIX translationMatrix = XMMatrixTranslation(positions[j].m128_f32[0], positions[j].m128_f32[1], positions[j].m128_f32[2]);
+		m_models[i]->SetWorldMatrix(rotationMatrix * translationMatrix);
+
 		if (!RenderModel(i, pCamera, pLightShader))
 		{
 			return false;

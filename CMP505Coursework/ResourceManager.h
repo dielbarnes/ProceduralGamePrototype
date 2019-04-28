@@ -14,6 +14,8 @@
 #include "LSystem.h"
 #include "Utils.h"
 
+#define COGWHEEL_TOOTH_SIZE 0.85f
+
 enum DdsTextureResource : int
 {
 	GroundTexture = 0
@@ -46,7 +48,7 @@ public:
 	bool LoadResources();
 	void RenderModel(TxtModelResource resource);
 	bool RenderModel(int iModelIndex, Camera *pCamera, LightShader *pLightShader);
-	bool RenderCogwheels(Camera *pCamera, LightShader *pLightShader);
+	bool RenderCogwheels(Camera *pCamera, LightShader *pLightShader, float fRotation);
 
 private:
 	ID3D11Device *m_pDevice;
@@ -57,8 +59,33 @@ private:
 	SkyDome *m_pSkyDome;
 	std::vector<Model*> m_models;
 	LSystem *m_pLSystem;
+	std::vector<float> m_cogwheelToothCount;
+	std::vector<float> m_cogwheelRadii;
 
 	HRESULT LoadDdsTexture(DdsTextureResource resource);
 	bool LoadTxtModel(TxtModelResource resource);
 	bool LoadModel(ModelResource resource, int iInstanceCount, Instance *instances = nullptr);
 };
+
+
+
+
+
+
+/*
+		case 4:
+			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { 2.0f, 2.5f, 9, 0, 0.85f, 0.85f }) }, pModel);
+			break;
+		case 5:
+			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { 1.55f, 2.1f, 7, 0, 0.85f, 0.85f }) }, pModel);
+			break;*/
+
+			/*
+			case 4:
+				fRotationZ *= 0.0f; //-1;
+				translationMatrix = XMMatrixTranslation(-22.0f, 11.0f, fPositionZ);
+				break;
+			case 5:
+				fRotationZ *= 0.0f; //1;
+				translationMatrix = XMMatrixTranslation(-26.3f, 7.8f, fPositionZ);
+				break;*/
