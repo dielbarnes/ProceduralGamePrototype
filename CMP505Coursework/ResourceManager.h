@@ -30,7 +30,7 @@ enum ModelResource : int
 	CrystalPostModel = 0,
 	CrystalFenceModel,
 	ClockModel, 
-	TestModel
+	CogwheelModel // Make this last
 };
 
 class ResourceManager
@@ -45,7 +45,8 @@ public:
 
 	bool LoadResources();
 	void RenderModel(TxtModelResource resource);
-	bool RenderModel(ModelResource resource, Camera *pCamera, LightShader *pLightShader);
+	bool RenderModel(int iModelIndex, Camera *pCamera, LightShader *pLightShader);
+	bool RenderCogwheels(Camera *pCamera, LightShader *pLightShader);
 
 private:
 	ID3D11Device *m_pDevice;

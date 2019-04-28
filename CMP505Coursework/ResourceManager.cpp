@@ -271,7 +271,7 @@ bool ResourceManager::LoadResources()
 
 	int iClockCount = 2;
 	Instance *clockInstances = new Instance[iClockCount];
-	clockInstances[0].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.8f, -1.0f) * XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 1.0f, XM_PI * 0.0f) * XMMatrixScaling(9.0f, 9.0f, 9.0f));
+	clockInstances[0].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.85f, -0.9f) * XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 1.0f, XM_PI * 0.0f) * XMMatrixScaling(11.0f, 11.0f, 11.0f));
 	clockInstances[1].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, -0.2f) * XMMatrixRotationRollPitchYaw(XM_PI * -0.5f, XM_PI * 1.0f, XM_PI * 0.0f) * XMMatrixScaling(18.0f, 18.0f, 18.0f));
 	for (int i = 0; i < iClockCount; i++)
 	{
@@ -284,20 +284,46 @@ bool ResourceManager::LoadResources()
 		return false;
 	}
 
-	// Test
+	// Cogwheels
 
-	Model *pModel = new Model(m_pDevice, m_pImmediateContext, m_pDefaultTexture);
-	//pModel->GenerateCogwheel();
+	float fPositionZ = 10.0f;
 
-	//Module module(CYLINDER_SYMBOL, { 3.0f, 11, 0, 1.0f, 1.0f });
-	Module module(TUBE_SYMBOL, { 2.0f, 3.0f, 11, 0, 1.0f, 1.0f });
-	Word axiom = { module };
-	m_pLSystem->GenerateModel(axiom, pModel);
-
-	m_models.push_back(pModel);
-	pModel->SetWorldMatrix(XMMatrixTranslation(-28.0f, 5.0f, 0.0f));
-	pModel->SetPointLightColor(COLOR_XMF4(0.0f, 0.0f, 0.0f, 1.0f));
-	pModel->SetPointLightStrength(0.0f);
+	for (int i = 0; i < 6; i++)
+	{
+		Model *pModel = new Model(m_pDevice, m_pImmediateContext, m_pDefaultTexture);
+		//pModel->GenerateCogwheel();
+		m_models.push_back(pModel);
+		pModel->SetPointLightColor(COLOR_XMF4(0.0f, 0.0f, 0.0f, 1.0f));
+		pModel->SetPointLightStrength(0.0f);
+		
+		switch (i)
+		{
+		case 0:
+			m_pLSystem->GenerateModel({ Module(CYLINDER_SYMBOL, { 1.5f, 7, 0, 0.7f, 0.7f }) }, pModel);
+			pModel->SetWorldMatrix(XMMatrixTranslation(-22.5f, 5.4f, fPositionZ));
+			break;
+		case 1:
+			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { 2.0f, 3.0f, 11, 0, 0.85f, 0.85f }) }, pModel);
+			pModel->SetWorldMatrix(XMMatrixTranslation(-17.1f, 4.5f, fPositionZ));
+			break;
+		case 2:
+			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { 3.5f, 5.0f, 16, 0, 0.9f, 0.9f }) }, pModel);
+			pModel->SetWorldMatrix(XMMatrixTranslation(-8.0f, 5.0f, fPositionZ));
+			break;
+		case 3:
+			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { 1.0f, 4.0f, 11, 0, 1.0f, 1.0f }) }, pModel);
+			pModel->SetWorldMatrix(XMMatrixTranslation(-14.6f, 12.8f, fPositionZ));
+			break;
+		case 4:
+			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { 2.0f, 2.5f, 8, 0, 0.8f, 0.9f }) }, pModel);
+			pModel->SetWorldMatrix(XMMatrixTranslation(-22.0f, 11.0f, fPositionZ));
+			break;
+		case 5:
+			m_pLSystem->GenerateModel({ Module(TUBE_SYMBOL, { 1.55f, 2.1f, 8, 0, 0.6f, 0.6f }) }, pModel);
+			pModel->SetWorldMatrix(XMMatrixTranslation(-26.3f, 7.8f, fPositionZ));
+			break;
+		}
+	}
 
 	return true;
 }
@@ -487,19 +513,33 @@ void ResourceManager::RenderModel(TxtModelResource resource)
 	}
 }
 
-bool ResourceManager::RenderModel(ModelResource resource, Camera *pCamera, LightShader *pLightShader)
+bool ResourceManager::RenderModel(int iModelIndex, Camera *pCamera, LightShader *pLightShader)
 {
-	if (!pLightShader->PreRender(m_models[resource], pCamera))
+	if (!pLightShader->PreRender(m_models[iModelIndex], pCamera))
 	{
 		return false;
 	}
 
-	std::vector<Mesh*> meshes = m_models[resource]->GetMeshes();
+	std::vector<Mesh*> meshes = m_models[iModelIndex]->GetMeshes();
 
 	for (int i = 0; i < meshes.size(); i++)
 	{
 		meshes[i]->Render(m_pImmediateContext);
 		pLightShader->Render(meshes[i], pCamera);
+	}
+
+	return true;
+}
+
+bool ResourceManager::RenderCogwheels(Camera *pCamera, LightShader *pLightShader)
+{
+	int iModelCount = static_cast<int>(m_models.size());
+	for (int i = ModelResource::CogwheelModel; i < iModelCount; i++)
+	{
+		if (!RenderModel(i, pCamera, pLightShader))
+		{
+			return false;
+		}
 	}
 
 	return true;

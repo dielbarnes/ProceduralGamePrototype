@@ -448,6 +448,11 @@ bool Graphics::Render(const float fDeltaTime)
 		return false;
 	}
 
+	if (!m_pResourceManager->RenderCogwheels(m_pCamera, m_pShaderManager->GetLightShader()))
+	{
+		return false;
+	}
+
 	// Set the depth test comparison to LESS_EQUAL
 	m_pImmediateContext->OMSetDepthStencilState(m_pDepthStencilStateLessEqual, 1);
 
@@ -483,15 +488,6 @@ bool Graphics::Render(const float fDeltaTime)
 
 	// Turn off alpha blending
 	m_pImmediateContext->OMSetBlendState(m_pBlendStateDisabled, blendFactor, sampleMask);
-
-
-
-	if (!m_pResourceManager->RenderModel(ModelResource::TestModel, m_pCamera, m_pShaderManager->GetLightShader()))
-	{
-		return false;
-	}
-
-
 
 	// For debugging only: save original scene texture as jpg
 	//m_pOffScreenRenderer->SaveTextureToFile();
