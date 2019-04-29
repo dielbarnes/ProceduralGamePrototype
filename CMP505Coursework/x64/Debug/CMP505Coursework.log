@@ -1,6 +1,6 @@
 ﻿  Engine.cpp
   Graphics.cpp
-c:\users\dielb\desktop\cmp505coursework\cmp505coursework\graphics.cpp(412): warning C4554: '&': check operator precedence for possible error; use parentheses to clarify precedence
+c:\users\dielb\desktop\cmp505coursework\cmp505coursework\graphics.cpp(418): warning C4554: '&': check operator precedence for possible error; use parentheses to clarify precedence
   Main.cpp
   ResourceManager.cpp
   Generating Code...

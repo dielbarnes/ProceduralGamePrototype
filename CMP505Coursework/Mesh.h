@@ -22,6 +22,7 @@ public:
 	Mesh(std::vector<ID3D11ShaderResourceView*> &textures, XMMATRIX transformMatrix);
 	~Mesh();
 
+	void SetTextures(std::vector<ID3D11ShaderResourceView*> textures);
 	std::vector<ID3D11ShaderResourceView*> GetTextures();
 	int GetIndexCount();
 	int GetInstanceCount();
@@ -38,6 +39,7 @@ private:
 	ID3D11Buffer *m_pIndexBuffer;
 	int m_iIndexCount;
 	ID3D11Buffer *m_pInstanceBuffer;
+	Instance *m_pInstances;
 	int m_iInstanceCount;
 	XMMATRIX m_worldMatrix;
 	XMMATRIX m_transformMatrix;

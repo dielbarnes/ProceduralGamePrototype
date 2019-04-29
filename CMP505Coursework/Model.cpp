@@ -488,6 +488,14 @@ void Model::AddBoxMesh(XMFLOAT3 size, XMMATRIX transformMatrix)
 
 #pragma region Setters/Getters
 
+void Model::SetTextures(std::vector<ID3D11ShaderResourceView*> textures)
+{
+	for (auto mesh : m_meshes)
+	{
+		mesh->SetTextures(textures);
+	}
+}
+
 std::vector<Mesh*> Model::GetMeshes()
 {
 	return m_meshes;
@@ -507,6 +515,11 @@ void Model::SetWorldMatrix(XMMATRIX worldMatrix)
 	}
 }
 
+void Model::SetWorldMatrixOfMesh(XMMATRIX worldMatrix, int iMeshIndex)
+{
+	m_meshes[iMeshIndex]->SetWorldMatrix(worldMatrix);
+}
+
 XMMATRIX Model::GetWorldMatrix()
 {
 	return m_worldMatrix;
@@ -522,9 +535,19 @@ XMFLOAT4 Model::GetDiffuseColor()
 	return m_diffuseColor;
 }
 
+void Model::SetSpecularColor(XMFLOAT4 color)
+{
+	m_specularColor = color;
+}
+
 XMFLOAT4 Model::GetSpecularColor()
 {
 	return m_specularColor;
+}
+
+void Model::SetSpecularPower(float fPower)
+{
+	m_fSpecularPower = fPower;
 }
 
 float Model::GetSpecularPower()

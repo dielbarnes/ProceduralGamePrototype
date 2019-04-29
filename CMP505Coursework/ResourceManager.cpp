@@ -12,8 +12,10 @@ ResourceManager::ResourceManager(ID3D11Device *pDevice, ID3D11DeviceContext *pIm
 	m_pDevice = pDevice;
 	m_pImmediateContext = pImmediateContext;
 	m_pLSystem = new LSystem();
-	bShouldRotateLeftCogwheels = false;
-	bShouldRotateRightCogwheels = false;
+	m_bShouldRotateLeftCogwheels = false;
+	m_bShouldRotateRightCogwheels = false;
+	m_bShouldRotateLeftLever = false;
+	m_bShouldRotateRightLever = false;
 
 	unsigned char color[] = { 200, 200, 220, 255 };
 	Model::Create1x1ColorTexture(m_pDevice, color, &m_pDefaultTexture);
@@ -286,6 +288,40 @@ bool ResourceManager::LoadResources()
 		return false;
 	}
 
+	// Lever
+
+	unsigned char leverColor[] = { 40, 50, 30, 255 };
+	ID3D11ShaderResourceView *pLeverTexture;
+	Model::Create1x1ColorTexture(m_pDevice, leverColor, &pLeverTexture);
+
+	m_leverScalingMatrix = XMMatrixScaling(0.011f, 0.011f, 0.011f);
+	XMMATRIX leverRotationMatrix = XMMatrixRotationRollPitchYaw(0.0f, XM_PI * 0.5f, 0.0f);
+	m_leftLeverTranslationMatrix = XMMatrixTranslation(-27.6f, 1.1f, -0.05f);
+
+	if (!LoadModel(ModelResource::LeverModel1, 1))
+	{
+		MessageBox(0, "Failed to load lever model.", "", 0);
+		return false;
+	}
+
+	m_models[ModelResource::LeverModel1]->SetTextures({ pLeverTexture });
+	m_models[ModelResource::LeverModel1]->SetWorldMatrix(m_leverScalingMatrix * leverRotationMatrix * m_leftLeverTranslationMatrix);
+	m_models[ModelResource::LeverModel1]->SetSpecularColor(COLOR_XMF4(120.0f, 130.0f, 110.0f, 1.0f));
+	m_models[ModelResource::LeverModel1]->SetSpecularPower(76.0f);
+
+	m_rightLeverTranslationMatrix = XMMatrixTranslation(27.6f, 1.1f, -0.05f);
+
+	if (!LoadModel(ModelResource::LeverModel2, 1))
+	{
+		MessageBox(0, "Failed to load lever model.", "", 0);
+		return false;
+	}
+
+	m_models[ModelResource::LeverModel2]->SetTextures({ pLeverTexture });
+	m_models[ModelResource::LeverModel2]->SetWorldMatrix(m_leverScalingMatrix * leverRotationMatrix * m_rightLeverTranslationMatrix);
+	m_models[ModelResource::LeverModel2]->SetSpecularColor(COLOR_XMF4(120.0f, 130.0f, 110.0f, 1.0f));
+	m_models[ModelResource::LeverModel2]->SetSpecularPower(76.0f);
+
 	// Cogwheels
 
 	m_cogwheelToothCount = { 17.0f, 14.0f, 10.0f, 6.0f, 8.0f, 17.0f, 14.0f, 10.0f, 6.0f, 8.0f };
@@ -510,6 +546,10 @@ bool ResourceManager::LoadModel(ModelResource resource, int iInstanceCount, Inst
 	case ClockModel:
 		strFilePath = "Resources/clock.obj";
 		break;
+	case LeverModel1:
+	case LeverModel2:
+		strFilePath = "Resources/lever.obj";
+		break;
 	}
 
 	Model *pModel = new Model(m_pDevice, m_pImmediateContext, m_pDefaultTexture);
@@ -544,12 +584,32 @@ SkyDome* ResourceManager::GetSkyDome()
 
 void ResourceManager::SetShouldRotateLeftCogwheels(bool bShouldRotate)
 {
-	bShouldRotateLeftCogwheels = bShouldRotate;
+	m_bShouldRotateLeftCogwheels = bShouldRotate;
 }
 
 void ResourceManager::SetShouldRotateRightCogwheels(bool bShouldRotate)
 {
-	bShouldRotateRightCogwheels = bShouldRotate;
+	m_bShouldRotateRightCogwheels = bShouldRotate;
+}
+
+void ResourceManager::SetShouldRotateLeftLever(bool bShouldRotate)
+{
+	m_bShouldRotateLeftLever = bShouldRotate;
+}
+
+bool ResourceManager::IsRotatingLeftLever()
+{
+	return m_bShouldRotateLeftLever;
+}
+
+void ResourceManager::SetShouldRotateRightLever(bool bShouldRotate)
+{
+	m_bShouldRotateRightLever = bShouldRotate;
+}
+
+bool ResourceManager::IsRotatingRightLever()
+{
+	return m_bShouldRotateRightLever;
 }
 
 #pragma endregion
@@ -586,7 +646,34 @@ bool ResourceManager::RenderModel(int iModelIndex, Camera *pCamera, LightShader 
 	return true;
 }
 
-bool ResourceManager::RenderCogwheels(Camera *pCamera, LightShader *pLightShader, float fRotation)
+bool ResourceManager::RenderLever(Camera *pCamera, LightShader *pLightShader, float fLeftRotation, float fRightRotation)
+{
+	if (m_bShouldRotateLeftLever)
+	{
+		XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(fLeftRotation * 3.0f, XM_PI * 0.5f, 0.0f);
+		m_models[ModelResource::LeverModel1]->SetWorldMatrixOfMesh(m_leverScalingMatrix * rotationMatrix * m_leftLeverTranslationMatrix, 0);
+	}
+
+	if (!RenderModel(ModelResource::LeverModel1, pCamera, pLightShader))
+	{
+		return false;
+	}
+
+	if (m_bShouldRotateRightLever)
+	{
+		XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(fRightRotation * 3.0f, XM_PI * 0.5f, 0.0f);
+		m_models[ModelResource::LeverModel2]->SetWorldMatrixOfMesh(m_leverScalingMatrix * rotationMatrix * m_rightLeverTranslationMatrix, 0);
+	}
+
+	if (!RenderModel(ModelResource::LeverModel2, pCamera, pLightShader))
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool ResourceManager::RenderCogwheels(Camera *pCamera, LightShader *pLightShader, float fLeftRotation, float fRightRotation)
 {
 	int iCogwheelCount = static_cast<int>(m_cogwheelToothCount.size());
 	std::vector<XMVECTOR> positions = { XMVectorSet(-8.0f, 5.0f, 10.0f, 0.0f) };
@@ -658,21 +745,21 @@ bool ResourceManager::RenderCogwheels(Camera *pCamera, LightShader *pLightShader
 		switch (j)
 		{
 		case 0: 
-			if (bShouldRotateLeftCogwheels) fRotationZ = fRotation;
+			if (m_bShouldRotateLeftCogwheels) fRotationZ = fLeftRotation;
 			break; 
 		case 1:
-			if (bShouldRotateLeftCogwheels) fRotationZ = -fRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[j]);
+			if (m_bShouldRotateLeftCogwheels) fRotationZ = -fLeftRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[j]);
 			break;
 		case 2:
 			fRotationZ = (XM_PI / m_cogwheelToothCount[j]) + 0.05f;
-			if (bShouldRotateLeftCogwheels) fRotationZ += -fRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[j]);
+			if (m_bShouldRotateLeftCogwheels) fRotationZ += -fLeftRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[j]);
 			break;
 		case 3:
 		{
 			fRotationZ = XM_PI / m_cogwheelToothCount[j] / 2;
-			if (bShouldRotateLeftCogwheels)
+			if (m_bShouldRotateLeftCogwheels)
 			{
-				float fDriverRotation = (XM_PI / m_cogwheelToothCount[2]) + fRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[2]);
+				float fDriverRotation = (XM_PI / m_cogwheelToothCount[2]) + fLeftRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[2]);
 				fRotationZ += (fDriverRotation - 0.05f) * (m_cogwheelRadii[2] / m_cogwheelRadii[j]);
 			}
 			break;
@@ -680,29 +767,29 @@ bool ResourceManager::RenderCogwheels(Camera *pCamera, LightShader *pLightShader
 		case 4:
 		{
 			fRotationZ = (XM_PI / m_cogwheelToothCount[j]) + 0.08f;
-			if (bShouldRotateLeftCogwheels)
+			if (m_bShouldRotateLeftCogwheels)
 			{
-				float fDriverRotation = fRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[1]);
+				float fDriverRotation = fLeftRotation * (m_cogwheelRadii[0] / m_cogwheelRadii[1]);
 				fRotationZ += fDriverRotation * (m_cogwheelRadii[1] / m_cogwheelRadii[j]);
 			}
 			break;
 		}
 		case 5:
-			if (bShouldRotateRightCogwheels) fRotationZ = -fRotation;
+			if (m_bShouldRotateRightCogwheels) fRotationZ = -fRightRotation;
 			break;
 		case 6:
-			if (bShouldRotateRightCogwheels) fRotationZ = fRotation * (m_cogwheelRadii[5] / m_cogwheelRadii[j]);
+			if (m_bShouldRotateRightCogwheels) fRotationZ = fRightRotation * (m_cogwheelRadii[5] / m_cogwheelRadii[j]);
 			break;
 		case 7:
 			fRotationZ = (XM_PI / m_cogwheelToothCount[j]) - 0.05f;
-			if (bShouldRotateRightCogwheels) fRotationZ += fRotation * (m_cogwheelRadii[5] / m_cogwheelRadii[j]);
+			if (m_bShouldRotateRightCogwheels) fRotationZ += fRightRotation * (m_cogwheelRadii[5] / m_cogwheelRadii[j]);
 			break;
 		case 8:
 		{
 			fRotationZ = XM_PI / m_cogwheelToothCount[j] / -2;
-			if (bShouldRotateRightCogwheels)
+			if (m_bShouldRotateRightCogwheels)
 			{
-				float fDriverRotation = (XM_PI / m_cogwheelToothCount[7]) + -fRotation * (m_cogwheelRadii[5] / m_cogwheelRadii[7]);
+				float fDriverRotation = (XM_PI / m_cogwheelToothCount[7]) + -fRightRotation * (m_cogwheelRadii[5] / m_cogwheelRadii[7]);
 				fRotationZ += (fDriverRotation + 0.05f) * (m_cogwheelRadii[7] / m_cogwheelRadii[j]);
 			}
 			break;
@@ -710,9 +797,9 @@ bool ResourceManager::RenderCogwheels(Camera *pCamera, LightShader *pLightShader
 		case 9:
 		{
 			fRotationZ = (XM_PI / m_cogwheelToothCount[j]) - 0.08f;
-			if (bShouldRotateRightCogwheels)
+			if (m_bShouldRotateRightCogwheels)
 			{
-				float fDriverRotation = -fRotation * (m_cogwheelRadii[5] / m_cogwheelRadii[6]);
+				float fDriverRotation = -fRightRotation * (m_cogwheelRadii[5] / m_cogwheelRadii[6]);
 				fRotationZ += fDriverRotation * (m_cogwheelRadii[6] / m_cogwheelRadii[j]);
 			}
 			break;

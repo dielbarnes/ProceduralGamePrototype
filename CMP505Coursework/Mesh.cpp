@@ -17,6 +17,7 @@ Mesh::Mesh(std::vector<ID3D11ShaderResourceView*> &textures, XMMATRIX transformM
 	m_pIndexBuffer = nullptr;
 	m_iIndexCount = 0;
 	m_pInstanceBuffer = nullptr;
+	m_pInstances = nullptr;
 	m_iInstanceCount = 0;
 	m_worldMatrix = XMMatrixIdentity();
 	m_transformMatrix = transformMatrix;
@@ -31,6 +32,7 @@ Mesh::~Mesh()
 	SAFE_RELEASE(m_pVertexBuffer);
 	SAFE_RELEASE(m_pIndexBuffer);
 	SAFE_RELEASE(m_pInstanceBuffer);
+	SAFE_DELETE(m_pInstances);
 }
 
 bool Mesh::InitializeBuffers(ID3D11Device *pDevice, std::vector<Vertex> &vertices, std::vector<DWORD> &indices, 
@@ -75,14 +77,18 @@ bool Mesh::InitializeBuffers(ID3D11Device *pDevice, std::vector<Vertex> &vertice
 
 	if (iInstanceCount > 1)
 	{
+		m_pInstances = instances;
+
 		// Create the instance buffer
 
 		bufferDesc.ByteWidth = sizeof(Instance) * iInstanceCount;
+		bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 		bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 		for (int i = 0; i < iInstanceCount; i++)
 		{
-			instances[i].worldMatrix *= m_transformMatrix;
+			instances[i].worldMatrix = m_transformMatrix * instances[i].worldMatrix;
 		}
 		subresourceData.pSysMem = instances;
 
@@ -100,6 +106,11 @@ bool Mesh::InitializeBuffers(ID3D11Device *pDevice, std::vector<Vertex> &vertice
 #pragma endregion
 
 #pragma region Setters/Getters
+
+void Mesh::SetTextures(std::vector<ID3D11ShaderResourceView*> textures)
+{
+	m_textures = textures;
+}
 
 std::vector<ID3D11ShaderResourceView*> Mesh::GetTextures()
 {
@@ -119,6 +130,13 @@ int Mesh::GetInstanceCount()
 void Mesh::SetWorldMatrix(XMMATRIX worldMatrix)
 {
 	m_worldMatrix = worldMatrix;
+	if (m_pInstances != nullptr)
+	{
+		for (int i = 0; i < m_iInstanceCount; i++)
+		{
+			m_pInstances[i].worldMatrix = m_transformMatrix * worldMatrix;
+		}
+	}
 }
 
 XMMATRIX Mesh::GetWorldMatrix()
@@ -132,6 +150,25 @@ XMMATRIX Mesh::GetWorldMatrix()
 
 void Mesh::Render(ID3D11DeviceContext *pImmediateContext)
 {
+	if (m_pInstances != nullptr)
+	{
+		// Update the instance buffer
+
+		// Lock the instance buffer so it can be written to
+		D3D11_MAPPED_SUBRESOURCE mappedResource;
+		HRESULT result = pImmediateContext->Map(m_pInstanceBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		if (FAILED(result))
+		{
+			Utils::ShowError("Failed to map the mesh instance buffer.", result);
+		}
+
+		// Copy the instances into the instance buffer
+		memcpy(mappedResource.pData, m_pInstances, sizeof(Instance) * m_iInstanceCount);
+
+		// Unlock the instance buffer
+		pImmediateContext->Unmap(m_pInstanceBuffer, 0);
+	}
+
 	// Set the vertex and index buffers to active in the input assembler so they can be rendered (put them on the graphics pipeline)
 
 	if (m_iInstanceCount == 1)

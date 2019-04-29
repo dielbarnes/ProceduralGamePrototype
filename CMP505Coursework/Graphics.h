@@ -52,8 +52,11 @@ private:
 	OffScreenRenderer *m_pOffScreenRenderer;
 	PostProcessQuad *m_pPostProcessQuad;
 	Bloom *m_pBloom;
-	float fTotalTime;
-	float fCogwheelRotation;
+	float m_fTotalTime;
+	float m_fLeftAnimationRotation;
+	float m_fRightAnimationRotation;
+	bool m_bPlayLeftAnimation;
+	bool m_bPlayRightAnimation;
 
 	HRESULT InitDirect3D(int iWindowWidth, int iWindowHeight, HWND hWindow);
 	void HandleKeyboardInput(float fDeltaTime);

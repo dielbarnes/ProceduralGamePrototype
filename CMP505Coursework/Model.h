@@ -26,13 +26,17 @@ public:
 	Model(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext, ID3D11ShaderResourceView *pDefaultTexture);
 	~Model();
 
+	void SetTextures(std::vector<ID3D11ShaderResourceView*> textures);
 	std::vector<Mesh*> GetMeshes();
 	int GetInstanceCount();
 	void SetWorldMatrix(XMMATRIX worldMatrix);
+	void SetWorldMatrixOfMesh(XMMATRIX worldMatrix, int iMeshIndex);
 	XMMATRIX GetWorldMatrix();
 	XMFLOAT4 GetAmbientColor();
 	XMFLOAT4 GetDiffuseColor();
+	void SetSpecularColor(XMFLOAT4 color);
 	XMFLOAT4 GetSpecularColor();
+	void SetSpecularPower(float fPower);
 	float GetSpecularPower();
 	void SetLightDirection(XMFLOAT3 lightDirection);
 	XMFLOAT3 GetLightDirection();

@@ -27,8 +27,11 @@ Graphics::Graphics()
 	m_pOffScreenRenderer = nullptr;
 	m_pPostProcessQuad = nullptr;
 	m_pBloom = nullptr;
-	fTotalTime = 0.0f;
-	fCogwheelRotation = 0.0f;
+	m_fTotalTime = 0.0f;
+	m_fLeftAnimationRotation = 0.0f;
+	m_fRightAnimationRotation = 0.0f;
+	m_bPlayLeftAnimation = false;
+	m_bPlayRightAnimation = false;
 }
 
 Graphics::~Graphics()
@@ -64,8 +67,8 @@ bool Graphics::Initialize(int iWindowWidth, int iWindowHeight, HWND hWindow)
 	}
 
 	// Initialize camera
-	XMFLOAT3 position = XMFLOAT3(-27.0f, 6.0f, -13.0f);// Left room
-	//XMFLOAT3 position = XMFLOAT3(0.1f, 6.0f, -13.0f); // Center room
+	//XMFLOAT3 position = XMFLOAT3(-27.0f, 6.0f, -13.0f);// Left room
+	XMFLOAT3 position = XMFLOAT3(0.1f, 6.0f, -14.0f); // Center room
 	float fAspectRatio = iWindowWidth / (float)iWindowHeight;
 	m_pCamera = new Camera(position, fAspectRatio);
 
@@ -386,8 +389,11 @@ void Graphics::HandleKeyboardInput(float fDeltaTime)
 
 	if (GetAsyncKeyState('I') & 0x8000)
 	{
-		m_pResourceManager->SetShouldRotateLeftCogwheels(true);
-		m_pResourceManager->SetShouldRotateRightCogwheels(true);
+		m_bPlayLeftAnimation = true;
+		m_pResourceManager->SetShouldRotateLeftLever(true);
+
+		m_bPlayRightAnimation = true;
+		m_pResourceManager->SetShouldRotateRightLever(true);
 	}
 }
 
@@ -426,7 +432,7 @@ void Graphics::OnMouseMove(WPARAM buttonState, int x, int y)
 
 bool Graphics::Render(const float fDeltaTime)
 {
-	fTotalTime += fDeltaTime;
+	m_fTotalTime += fDeltaTime;
 
 	HandleKeyboardInput(fDeltaTime);
 	m_pCamera->Update();
@@ -454,9 +460,57 @@ bool Graphics::Render(const float fDeltaTime)
 	{
 		return false;
 	}
+	
+	if (m_bPlayLeftAnimation)
+	{
+		if (m_pResourceManager->IsRotatingLeftLever())
+		{
+			if (m_fLeftAnimationRotation < XM_PI * 18 / 180) // 54 degrees / 3.0 speed
+			{
+				m_fLeftAnimationRotation += XM_PI * 0.001f;
+			}
+			else
+			{
+				m_pResourceManager->SetShouldRotateLeftLever(false);
 
-	fCogwheelRotation += XM_PI * 0.001f;
-	if (!m_pResourceManager->RenderCogwheels(m_pCamera, m_pShaderManager->GetLightShader(), fCogwheelRotation))
+				m_fLeftAnimationRotation = 0.0f;
+				m_pResourceManager->SetShouldRotateLeftCogwheels(true);
+			}
+		}
+		else
+		{
+			m_fLeftAnimationRotation += XM_PI * 0.001f;
+		}
+	}
+
+	if (m_bPlayRightAnimation)
+	{
+		if (m_pResourceManager->IsRotatingRightLever())
+		{
+			if (m_fRightAnimationRotation < XM_PI * 18 / 180) // 54 degrees / 3.0 speed
+			{
+				m_fRightAnimationRotation += XM_PI * 0.001f;
+			}
+			else
+			{
+				m_pResourceManager->SetShouldRotateRightLever(false);
+
+				m_fRightAnimationRotation = 0.0f;
+				m_pResourceManager->SetShouldRotateRightCogwheels(true);
+			}
+		}
+		else
+		{
+			m_fRightAnimationRotation += XM_PI * 0.001f;
+		}
+	}
+
+	if (!m_pResourceManager->RenderLever(m_pCamera, m_pShaderManager->GetLightShader(), m_fLeftAnimationRotation, m_fRightAnimationRotation))
+	{
+		return false;
+	}
+	
+	if (!m_pResourceManager->RenderCogwheels(m_pCamera, m_pShaderManager->GetLightShader(), m_fLeftAnimationRotation, m_fRightAnimationRotation))
 	{
 		return false;
 	}
@@ -473,7 +527,7 @@ bool Graphics::Render(const float fDeltaTime)
 
 	// Render sky dome
 	m_pResourceManager->RenderModel(TxtModelResource::SkyDomeModel);
-	if (!m_pShaderManager->RenderSkyDome(m_pResourceManager->GetSkyDome(), m_pCamera, fTotalTime))
+	if (!m_pShaderManager->RenderSkyDome(m_pResourceManager->GetSkyDome(), m_pCamera, m_fTotalTime))
 	{
 		return false;
 	}

@@ -32,6 +32,8 @@ enum ModelResource : int
 	CrystalPostModel = 0,
 	CrystalFenceModel,
 	ClockModel, 
+	LeverModel1,
+	LeverModel2,
 	CogwheelModel // Make this last
 };
 
@@ -46,11 +48,16 @@ public:
 	SkyDome* GetSkyDome();
 	void SetShouldRotateLeftCogwheels(bool bShouldRotate);
 	void SetShouldRotateRightCogwheels(bool bShouldRotate);
+	void SetShouldRotateLeftLever(bool bShouldRotate);
+	bool IsRotatingLeftLever();
+	void SetShouldRotateRightLever(bool bShouldRotate);
+	bool IsRotatingRightLever();
 
 	bool LoadResources();
 	void RenderModel(TxtModelResource resource);
 	bool RenderModel(int iModelIndex, Camera *pCamera, LightShader *pLightShader);
-	bool RenderCogwheels(Camera *pCamera, LightShader *pLightShader, float fRotation);
+	bool RenderLever(Camera *pCamera, LightShader *pLightShader, float fLeftRotation, float fRightRotation);
+	bool RenderCogwheels(Camera *pCamera, LightShader *pLightShader, float fLeftRotation, float fRightRotation);
 
 private:
 	ID3D11Device *m_pDevice;
@@ -63,8 +70,13 @@ private:
 	LSystem *m_pLSystem;
 	std::vector<float> m_cogwheelToothCount;
 	std::vector<float> m_cogwheelRadii;
-	bool bShouldRotateLeftCogwheels;
-	bool bShouldRotateRightCogwheels;
+	bool m_bShouldRotateLeftCogwheels;
+	bool m_bShouldRotateRightCogwheels;
+	bool m_bShouldRotateLeftLever;
+	bool m_bShouldRotateRightLever;
+	XMMATRIX m_leverScalingMatrix;
+	XMMATRIX m_leftLeverTranslationMatrix;
+	XMMATRIX m_rightLeverTranslationMatrix;
 
 	HRESULT LoadDdsTexture(DdsTextureResource resource);
 	bool LoadTxtModel(TxtModelResource resource);
