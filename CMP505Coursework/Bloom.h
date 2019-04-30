@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <DirectXTK/WICTextureLoader.h>
 #include "Blur.h"
 
 struct BloomExtractBuffer // For pixel shader
@@ -22,6 +23,8 @@ struct BloomCombineBuffer // For pixel shader
 	float bloomSaturation;
 	float sceneIntensity;
 	float sceneSaturation;
+	int shouldShowText;
+	XMINT3 padding;
 };
 
 class Bloom
@@ -32,6 +35,7 @@ public:
 
 	ID3D11ShaderResourceView* GetExtractTexture();
 	ID3D11ShaderResourceView* GetBlurTexture();
+	void SetShouldShowText(bool bShouldShowText);
 
 	HRESULT Initialize(int iWindowWidth, int iWindowHeight);
 	bool RenderBloomExtractToTexture(PostProcessQuad *pQuad, ID3D11ShaderResourceView *pSceneTexture);
@@ -51,4 +55,6 @@ private:
 	ID3D11SamplerState *m_pSamplerState;
 	OffScreenRenderer *m_pExtractRenderer;
 	Blur *m_pBlur;
+	ID3D11ShaderResourceView *m_pTextTexture;
+	bool m_bShouldShowText;
 };

@@ -12,6 +12,7 @@ static const float3 grayScaleIntensity = { 0.3f, 0.59f, 0.11f };
 
 Texture2D sceneTexture;
 Texture2D bloomTexture;
+Texture2D textTexture;
 SamplerState samplerState;
 
 // Constant buffer
@@ -22,6 +23,8 @@ cbuffer BloomCombineBuffer
     float bloomSaturation;
     float sceneIntensity;
     float sceneSaturation;
+    int shouldShowText;
+    int3 padding;
 };
 
 // Input
@@ -46,6 +49,7 @@ float4 PS(PS_INPUT input) : SV_TARGET
 {
     float4 sceneColor = sceneTexture.Sample(samplerState, input.texCoord);
     float4 bloomColor = bloomTexture.Sample(samplerState, input.texCoord);
+    float4 textColor = textTexture.Sample(samplerState, input.texCoord);
     
     sceneColor = AdjustSaturation(sceneColor, sceneSaturation) * sceneIntensity;
     bloomColor = AdjustSaturation(bloomColor, bloomSaturation) * bloomIntensity;
@@ -53,5 +57,5 @@ float4 PS(PS_INPUT input) : SV_TARGET
 	// Darken down the base image in areas where there is a lot of bloom to prevent things looking excessively burned-out
     sceneColor *= (1 - saturate(bloomColor));
 
-    return sceneColor + bloomColor;
+    return sceneColor + bloomColor + (textColor * shouldShowText);
 }

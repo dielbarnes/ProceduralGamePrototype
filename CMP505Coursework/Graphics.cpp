@@ -497,6 +497,15 @@ bool Graphics::Render(const float fDeltaTime)
 	m_cameraCollisionSphere.leftLeverCollision = m_leftLeverCollisionBox.Contains(m_cameraCollisionSphere.sphere);
 	m_cameraCollisionSphere.rightLeverCollision = m_rightLeverCollisionBox.Contains(m_cameraCollisionSphere.sphere);
 
+	if ((m_cameraCollisionSphere.leftLeverCollision != DISJOINT && !m_bPlayLeftAnimation) || (m_cameraCollisionSphere.rightLeverCollision != DISJOINT && !m_bPlayRightAnimation))
+	{
+		m_pBloom->SetShouldShowText(true);
+	}
+	else
+	{
+		m_pBloom->SetShouldShowText(false);
+	}
+
 	// Render to texture
 	m_pOffScreenRenderer->SetRenderTarget();
 

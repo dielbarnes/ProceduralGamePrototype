@@ -23,6 +23,7 @@ Bloom::Bloom(ID3D11Device *pDevice, ID3D11DeviceContext *pImmediateContext)
 	m_pSamplerState = nullptr;
 	m_pExtractRenderer = new OffScreenRenderer(pDevice, pImmediateContext);
 	m_pBlur = new Blur(pDevice, pImmediateContext);
+	m_bShouldShowText = false;
 }
 
 Bloom::~Bloom()
@@ -201,6 +202,16 @@ HRESULT Bloom::Initialize(int iWindowWidth, int iWindowHeight)
 		return result;
 	}
 
+	// Create text texture
+	std::string strFilePath = "Resources/text.png";
+	std::wstring wstrFilePath(strFilePath.begin(), strFilePath.end());
+	result = CreateWICTextureFromFile(m_pDevice, wstrFilePath.c_str(), nullptr, &m_pTextTexture);
+	if (FAILED(result))
+	{
+		Utils::ShowError("Failed to create text texture.", result);
+		return result;
+	}
+
 	return result;
 }
 
@@ -216,6 +227,11 @@ ID3D11ShaderResourceView* Bloom::GetExtractTexture()
 ID3D11ShaderResourceView* Bloom::GetBlurTexture()
 {
 	return m_pBlur->GetOutputTexture();
+}
+
+void Bloom::SetShouldShowText(bool bShouldShowText)
+{
+	m_bShouldShowText = bShouldShowText;
 }
 
 #pragma endregion
@@ -313,6 +329,8 @@ bool Bloom::RenderBloomCombine(PostProcessQuad *pQuad, ID3D11ShaderResourceView 
 	pCombineBufferData->bloomSaturation = 1.0f;
 	pCombineBufferData->sceneIntensity = 1.0f;
 	pCombineBufferData->sceneSaturation = 1.0f;
+	pCombineBufferData->shouldShowText = m_bShouldShowText ? 1 : 0;
+	pCombineBufferData->padding = XMINT3(0, 0, 0);
 
 	// Unlock the combine buffer
 	m_pImmediateContext->Unmap(m_pCombineBuffer, 0);
@@ -325,6 +343,7 @@ bool Bloom::RenderBloomCombine(PostProcessQuad *pQuad, ID3D11ShaderResourceView 
 	m_pImmediateContext->PSSetShaderResources(0, 1, &pSceneTexture);
 	ID3D11ShaderResourceView *pBloomTexture = m_pBlur->GetOutputTexture();
 	m_pImmediateContext->PSSetShaderResources(1, 1, &pBloomTexture);
+	m_pImmediateContext->PSSetShaderResources(2, 1, &m_pTextTexture);
 
 	// Set the sampler state in the pixel shader
 	m_pImmediateContext->PSSetSamplers(0, 1, &m_pSamplerState);
