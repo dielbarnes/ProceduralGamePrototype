@@ -83,7 +83,7 @@ bool TxtModel::InitializeBuffers(ID3D11Device *pDevice, int iInstanceCount, Inst
 	HRESULT result = pDevice->CreateBuffer(&bufferDesc, &subresourceData, &m_pVertexBuffer);
 	if (FAILED(result))
 	{
-		Utils::ShowError("Failed to create vertex buffer.", result);
+		Utils::ShowError("Failed to create text model vertex buffer.", result);
 		return false;
 	}
 
@@ -97,7 +97,7 @@ bool TxtModel::InitializeBuffers(ID3D11Device *pDevice, int iInstanceCount, Inst
 	result = pDevice->CreateBuffer(&bufferDesc, &subresourceData, &m_pIndexBuffer);
 	if (FAILED(result))
 	{
-		Utils::ShowError("Failed to create index buffer.", result);
+		Utils::ShowError("Failed to create text model index buffer.", result);
 		return false;
 	}
 

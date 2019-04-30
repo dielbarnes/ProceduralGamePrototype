@@ -296,7 +296,7 @@ bool ResourceManager::LoadResources()
 
 	m_leverScalingMatrix = XMMatrixScaling(0.011f, 0.011f, 0.011f);
 	XMMATRIX leverRotationMatrix = XMMatrixRotationRollPitchYaw(0.0f, XM_PI * 0.5f, 0.0f);
-	m_leftLeverTranslationMatrix = XMMatrixTranslation(-27.6f, 1.1f, -0.05f);
+	m_leftLeverTranslationMatrix = XMMatrixTranslation(LEFT_LEVER_POSITION.x, LEFT_LEVER_POSITION.y, LEFT_LEVER_POSITION.z);
 
 	if (!LoadModel(ModelResource::LeverModel1, 1))
 	{
@@ -309,7 +309,7 @@ bool ResourceManager::LoadResources()
 	m_models[ModelResource::LeverModel1]->SetSpecularColor(COLOR_XMF4(120.0f, 130.0f, 110.0f, 1.0f));
 	m_models[ModelResource::LeverModel1]->SetSpecularPower(76.0f);
 
-	m_rightLeverTranslationMatrix = XMMatrixTranslation(27.6f, 1.1f, -0.05f);
+	m_rightLeverTranslationMatrix = XMMatrixTranslation(RIGHT_LEVER_POSITION.x, RIGHT_LEVER_POSITION.y, RIGHT_LEVER_POSITION.z);
 
 	if (!LoadModel(ModelResource::LeverModel2, 1))
 	{
@@ -587,9 +587,19 @@ void ResourceManager::SetShouldRotateLeftCogwheels(bool bShouldRotate)
 	m_bShouldRotateLeftCogwheels = bShouldRotate;
 }
 
+bool ResourceManager::IsRotatingLeftCogwheels()
+{
+	return m_bShouldRotateLeftCogwheels;
+}
+
 void ResourceManager::SetShouldRotateRightCogwheels(bool bShouldRotate)
 {
 	m_bShouldRotateRightCogwheels = bShouldRotate;
+}
+
+bool ResourceManager::IsRotatingRightCogwheels()
+{
+	return m_bShouldRotateRightCogwheels;
 }
 
 void ResourceManager::SetShouldRotateLeftLever(bool bShouldRotate)

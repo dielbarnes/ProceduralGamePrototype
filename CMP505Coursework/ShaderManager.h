@@ -7,6 +7,7 @@
 
 #include "LightShader.h"
 #include "SkyDomeShader.h"
+#include "ColorShader.h"
 
 class ShaderManager
 {
@@ -19,8 +20,10 @@ public:
 	HRESULT InitializeShaders();
 	bool RenderModel(TxtModel *pModel, Camera *pCamera);
 	bool RenderSkyDome(SkyDome *pSkyDome, Camera *pCamera, float fTime);
+	bool RenderModel(ColorModel *pModel, Camera *pCamera);
 
 private:
 	LightShader *m_pLightShader;
 	SkyDomeShader *m_pSkyDomeShader;
+	ColorShader *m_pColorShader;
 };

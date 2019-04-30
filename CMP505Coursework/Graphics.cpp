@@ -2,6 +2,9 @@
 // Graphics.cpp
 // Copyright © 2019 Diel Barnes. All rights reserved.
 //
+// Reference:
+// DirectXMath Win32 Sample: Collision (https://code.msdn.microsoft.com/DirectXMath-Win32-Sample-f365b9e5)
+//
 
 #include "Graphics.h"
 
@@ -32,6 +35,8 @@ Graphics::Graphics()
 	m_fRightAnimationRotation = 0.0f;
 	m_bPlayLeftAnimation = false;
 	m_bPlayRightAnimation = false;
+	m_pLeftLeverBoxModel = nullptr;
+	m_pRightLeverBoxModel = nullptr;
 }
 
 Graphics::~Graphics()
@@ -54,6 +59,8 @@ Graphics::~Graphics()
 	SAFE_DELETE(m_pOffScreenRenderer)
 	SAFE_DELETE(m_pPostProcessQuad)
 	SAFE_DELETE(m_pBloom)
+	SAFE_DELETE(m_pLeftLeverBoxModel)
+	SAFE_DELETE(m_pRightLeverBoxModel)
 }
 
 bool Graphics::Initialize(int iWindowWidth, int iWindowHeight, HWND hWindow)
@@ -68,7 +75,7 @@ bool Graphics::Initialize(int iWindowWidth, int iWindowHeight, HWND hWindow)
 
 	// Initialize camera
 	//XMFLOAT3 position = XMFLOAT3(-27.0f, 6.0f, -13.0f);// Left room
-	XMFLOAT3 position = XMFLOAT3(0.1f, 6.0f, -14.0f); // Center room
+	XMFLOAT3 position = XMFLOAT3(0.1f, 6.0f, -16.0f); // Center room
 	float fAspectRatio = iWindowWidth / (float)iWindowHeight;
 	m_pCamera = new Camera(position, fAspectRatio);
 
@@ -103,6 +110,12 @@ bool Graphics::Initialize(int iWindowWidth, int iWindowHeight, HWND hWindow)
 	// Initialize bloom
 	m_pBloom = new Bloom(m_pDevice, m_pImmediateContext);
 	if (FAILED(m_pBloom->Initialize(iWindowWidth, iWindowHeight)))
+	{
+		return false;
+	}
+
+	// Initialize collision boxes, box models, and camera collision sphere
+	if (!InitCollision())
 	{
 		return false;
 	}
@@ -331,6 +344,40 @@ HRESULT Graphics::InitDirect3D(int iWindowWidth, int iWindowHeight, HWND hWindow
 	return result;
 }
 
+bool Graphics::InitCollision()
+{
+	XMFLOAT3 boxExtents = XMFLOAT3(3.0f, 3.0f, 3.0f);
+
+	// Setup the collision boxes
+	m_leftLeverCollisionBox.Center = LEFT_LEVER_POSITION;
+	m_leftLeverCollisionBox.Extents = boxExtents;
+	m_rightLeverCollisionBox.Center = RIGHT_LEVER_POSITION;
+	m_rightLeverCollisionBox.Extents = boxExtents;
+
+	// Initialize box models
+	XMMATRIX boxScalingMatrix = XMMatrixScaling(boxExtents.x, boxExtents.y, boxExtents.z);
+	m_pLeftLeverBoxModel = new ColorModel();
+	if (!m_pLeftLeverBoxModel->InitializeBuffers(m_pDevice))
+	{
+		return false;
+	}
+	m_pLeftLeverBoxModel->SetWorldMatrix(boxScalingMatrix * XMMatrixTranslation(LEFT_LEVER_POSITION.x, LEFT_LEVER_POSITION.y, LEFT_LEVER_POSITION.z));
+	m_pRightLeverBoxModel = new ColorModel();
+	if (!m_pRightLeverBoxModel->InitializeBuffers(m_pDevice))
+	{
+		return false;
+	}
+	m_pRightLeverBoxModel->SetWorldMatrix(boxScalingMatrix * XMMatrixTranslation(RIGHT_LEVER_POSITION.x, RIGHT_LEVER_POSITION.y, RIGHT_LEVER_POSITION.z));
+
+	// Setup the camera collision sphere
+	m_cameraCollisionSphere.sphere.Radius = 3.0f;
+	m_cameraCollisionSphere.sphere.Center = m_pCamera->GetPosition();
+	m_cameraCollisionSphere.leftLeverCollision = DISJOINT;
+	m_cameraCollisionSphere.rightLeverCollision = DISJOINT;
+
+	return true;
+}
+
 #pragma endregion
 
 #pragma region Input Handling
@@ -389,11 +436,17 @@ void Graphics::HandleKeyboardInput(float fDeltaTime)
 
 	if (GetAsyncKeyState('I') & 0x8000)
 	{
-		m_bPlayLeftAnimation = true;
-		m_pResourceManager->SetShouldRotateLeftLever(true);
+		if (m_cameraCollisionSphere.leftLeverCollision != DISJOINT && !m_pResourceManager->IsRotatingLeftCogwheels())
+		{
+			m_bPlayLeftAnimation = true;
+			m_pResourceManager->SetShouldRotateLeftLever(true);
+		}
 
-		m_bPlayRightAnimation = true;
-		m_pResourceManager->SetShouldRotateRightLever(true);
+		if (m_cameraCollisionSphere.rightLeverCollision != DISJOINT && !m_pResourceManager->IsRotatingRightCogwheels())
+		{
+			m_bPlayRightAnimation = true;
+			m_pResourceManager->SetShouldRotateRightLever(true);
+		}
 	}
 }
 
@@ -436,6 +489,11 @@ bool Graphics::Render(const float fDeltaTime)
 
 	HandleKeyboardInput(fDeltaTime);
 	m_pCamera->Update();
+
+	m_cameraCollisionSphere.sphere.Center = m_pCamera->GetPosition();
+
+	m_cameraCollisionSphere.leftLeverCollision = m_leftLeverCollisionBox.Contains(m_cameraCollisionSphere.sphere);
+	m_cameraCollisionSphere.rightLeverCollision = m_rightLeverCollisionBox.Contains(m_cameraCollisionSphere.sphere);
 
 	// Render to texture
 	m_pOffScreenRenderer->SetRenderTarget();
@@ -550,6 +608,20 @@ bool Graphics::Render(const float fDeltaTime)
 
 	// Turn off alpha blending
 	m_pImmediateContext->OMSetBlendState(m_pBlendStateDisabled, blendFactor, sampleMask);
+
+	/*// Render collision box models
+
+	m_pLeftLeverBoxModel->Render(m_pImmediateContext);
+	if (!m_pShaderManager->RenderModel(m_pLeftLeverBoxModel, m_pCamera))
+	{
+		return false;
+	}
+
+	m_pRightLeverBoxModel->Render(m_pImmediateContext);
+	if (!m_pShaderManager->RenderModel(m_pRightLeverBoxModel, m_pCamera))
+	{
+		return false;
+	}*/
 
 	// For debugging only: save original scene texture as jpg
 	//m_pOffScreenRenderer->SaveTextureToFile();

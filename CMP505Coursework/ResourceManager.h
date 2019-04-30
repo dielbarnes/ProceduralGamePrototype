@@ -14,6 +14,8 @@
 #include "LSystem.h"
 #include "Utils.h"
 
+#define LEFT_LEVER_POSITION XMFLOAT3(-27.6f, 1.1f, -0.05f)
+#define RIGHT_LEVER_POSITION XMFLOAT3(27.6f, 1.1f, -0.05f)
 #define COGWHEEL_TOOTH_SIZE 0.85f
 
 enum DdsTextureResource : int
@@ -47,7 +49,9 @@ public:
 	TxtModel* GetModel(TxtModelResource resource);
 	SkyDome* GetSkyDome();
 	void SetShouldRotateLeftCogwheels(bool bShouldRotate);
+	bool IsRotatingLeftCogwheels();
 	void SetShouldRotateRightCogwheels(bool bShouldRotate);
+	bool IsRotatingRightCogwheels();
 	void SetShouldRotateLeftLever(bool bShouldRotate);
 	bool IsRotatingLeftLever();
 	void SetShouldRotateRightLever(bool bShouldRotate);

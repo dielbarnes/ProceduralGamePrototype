@@ -11,12 +11,14 @@ ShaderManager::ShaderManager(ID3D11Device *device, ID3D11DeviceContext *immediat
 {
 	m_pLightShader = new LightShader(device, immediateContext);
 	m_pSkyDomeShader = new SkyDomeShader(device, immediateContext);
+	m_pColorShader = new ColorShader(device, immediateContext);
 }
 
 ShaderManager::~ShaderManager()
 {
 	SAFE_DELETE(m_pLightShader)
 	SAFE_DELETE(m_pSkyDomeShader)
+	SAFE_DELETE(m_pColorShader)
 }
 
 HRESULT ShaderManager::InitializeShaders()
@@ -30,6 +32,12 @@ HRESULT ShaderManager::InitializeShaders()
 	}
 
 	result = m_pSkyDomeShader->Initialize();
+	if (FAILED(result))
+	{
+		return result;
+	}
+
+	result = m_pColorShader->Initialize();
 	if (FAILED(result))
 	{
 		return result;
@@ -51,14 +59,19 @@ LightShader* ShaderManager::GetLightShader()
 
 #pragma region Render
 
-bool ShaderManager::RenderModel(TxtModel* pModel, Camera* pCamera)
+bool ShaderManager::RenderModel(TxtModel *pModel, Camera *pCamera)
 {
 	return m_pLightShader->Render(pModel, pCamera);
 }
 
-bool ShaderManager::RenderSkyDome(SkyDome *pSkyDome, Camera* pCamera, float fTime)
+bool ShaderManager::RenderSkyDome(SkyDome *pSkyDome, Camera *pCamera, float fTime)
 {
 	return m_pSkyDomeShader->Render(pSkyDome, pCamera, fTime);
+}
+
+bool ShaderManager::RenderModel(ColorModel *pModel, Camera *pCamera)
+{
+	return m_pColorShader->Render(pModel, pCamera);
 }
 
 #pragma endregion

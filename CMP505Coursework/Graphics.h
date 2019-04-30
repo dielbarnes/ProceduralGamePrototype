@@ -2,21 +2,33 @@
 // Graphics.h
 // Copyright © 2019 Diel Barnes. All rights reserved.
 //
+// Reference:
+// DirectXMath Win32 Sample: Collision (https://code.msdn.microsoft.com/DirectXMath-Win32-Sample-f365b9e5)
+//
 
 #pragma once
 
 #include <windows.h>
 #include <dxgi.h>
 #include <d3d11.h>
+#include <DirectXCollision.h>
 #include "Camera.h"
 #include "ResourceManager.h"
 #include "ShaderManager.h"
 #include "Bloom.h"
+#include "ColorModel.h"
 #include "Utils.h"
 
 // Link necessary libraries
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3d11.lib")
+
+struct CollisionSphere
+{
+	BoundingSphere sphere;
+	ContainmentType leftLeverCollision;
+	ContainmentType rightLeverCollision;
+};
 
 using namespace DirectX;
 
@@ -57,8 +69,14 @@ private:
 	float m_fRightAnimationRotation;
 	bool m_bPlayLeftAnimation;
 	bool m_bPlayRightAnimation;
+	BoundingBox m_leftLeverCollisionBox; // Axis-aligned box
+	BoundingBox m_rightLeverCollisionBox;
+	ColorModel *m_pLeftLeverBoxModel;
+	ColorModel *m_pRightLeverBoxModel;
+	CollisionSphere m_cameraCollisionSphere;
 
 	HRESULT InitDirect3D(int iWindowWidth, int iWindowHeight, HWND hWindow);
+	bool InitCollision();
 	void HandleKeyboardInput(float fDeltaTime);
 	void SetRenderTarget();
 	void UnbindPixelShaderResources();
