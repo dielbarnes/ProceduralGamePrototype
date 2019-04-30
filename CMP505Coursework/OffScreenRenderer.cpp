@@ -24,7 +24,7 @@ OffScreenRenderer::~OffScreenRenderer()
 {
 	SAFE_RELEASE(m_pRenderTargetView)
 	SAFE_RELEASE(m_pDepthStencilView)
-	SAFE_DELETE(m_pOutputTexture)
+	SAFE_RELEASE(m_pOutputTexture)
 	SAFE_RELEASE(m_p2DTexture)
 }
 

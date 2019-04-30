@@ -67,8 +67,10 @@ private:
 	float m_fTotalTime;
 	float m_fLeftAnimationRotation;
 	float m_fRightAnimationRotation;
+	float m_fClockRotation;
 	bool m_bPlayLeftAnimation;
 	bool m_bPlayRightAnimation;
+	bool m_bPlayClockAnimation;
 	BoundingBox m_leftLeverCollisionBox; // Axis-aligned box
 	BoundingBox m_rightLeverCollisionBox;
 	ColorModel *m_pLeftLeverBoxModel;

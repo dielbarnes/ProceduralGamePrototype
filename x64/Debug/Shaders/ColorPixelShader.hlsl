@@ -11,7 +11,7 @@
 struct PS_INPUT
 {
     float4 position : SV_POSITION;
-    float2 color : COLOR;
+    float4 color : COLOR;
 };
 
 // Entry point

@@ -33,8 +33,10 @@ Graphics::Graphics()
 	m_fTotalTime = 0.0f;
 	m_fLeftAnimationRotation = 0.0f;
 	m_fRightAnimationRotation = 0.0f;
+	m_fClockRotation = 0.0f;
 	m_bPlayLeftAnimation = false;
 	m_bPlayRightAnimation = false;
+	m_bPlayClockAnimation = false;
 	m_pLeftLeverBoxModel = nullptr;
 	m_pRightLeverBoxModel = nullptr;
 }
@@ -147,7 +149,7 @@ HRESULT Graphics::InitDirect3D(int iWindowWidth, int iWindowHeight, HWND hWindow
 	result = D3D11CreateDeviceAndSwapChain(nullptr,						// Use the default adapter (first adapter enumerated by IDXGIFactory::EnumAdapters)
 										   D3D_DRIVER_TYPE_HARDWARE,	// Implement Direct3D features in hardware for best performance
 										   nullptr,						// Software for D3D_DRIVER_TYPE_SOFTWARE
-										   D3D11_CREATE_DEVICE_DEBUG,	// Runtime layer flags
+										   0, //D3D11_CREATE_DEVICE_DEBUG,	// Runtime layer flags
 										   featureLevels,
 										   ARRAYSIZE(featureLevels),	
 										   D3D11_SDK_VERSION,
@@ -346,7 +348,7 @@ HRESULT Graphics::InitDirect3D(int iWindowWidth, int iWindowHeight, HWND hWindow
 
 bool Graphics::InitCollision()
 {
-	XMFLOAT3 boxExtents = XMFLOAT3(3.0f, 3.0f, 3.0f);
+	XMFLOAT3 boxExtents = XMFLOAT3(4.0f, 4.0f, 4.0f);
 
 	// Setup the collision boxes
 	m_leftLeverCollisionBox.Center = LEFT_LEVER_POSITION;
@@ -370,7 +372,7 @@ bool Graphics::InitCollision()
 	m_pRightLeverBoxModel->SetWorldMatrix(boxScalingMatrix * XMMatrixTranslation(RIGHT_LEVER_POSITION.x, RIGHT_LEVER_POSITION.y, RIGHT_LEVER_POSITION.z));
 
 	// Setup the camera collision sphere
-	m_cameraCollisionSphere.sphere.Radius = 3.0f;
+	m_cameraCollisionSphere.sphere.Radius = 4.0f;
 	m_cameraCollisionSphere.sphere.Center = m_pCamera->GetPosition();
 	m_cameraCollisionSphere.leftLeverCollision = DISJOINT;
 	m_cameraCollisionSphere.rightLeverCollision = DISJOINT;
@@ -533,6 +535,12 @@ bool Graphics::Render(const float fDeltaTime)
 
 				m_fLeftAnimationRotation = 0.0f;
 				m_pResourceManager->SetShouldRotateLeftCogwheels(true);
+
+				if (m_pResourceManager->IsRotatingRightCogwheels())
+				{
+					m_bPlayClockAnimation = true;
+					m_pResourceManager->SetShouldRotateClock(true);
+				}
 			}
 		}
 		else
@@ -555,6 +563,12 @@ bool Graphics::Render(const float fDeltaTime)
 
 				m_fRightAnimationRotation = 0.0f;
 				m_pResourceManager->SetShouldRotateRightCogwheels(true);
+
+				if (m_pResourceManager->IsRotatingLeftCogwheels())
+				{
+					m_bPlayClockAnimation = true;
+					m_pResourceManager->SetShouldRotateClock(true);
+				}
 			}
 		}
 		else
@@ -601,7 +615,12 @@ bool Graphics::Render(const float fDeltaTime)
 	UINT sampleMask = 0xffffffff; // Determines which samples get updated in all the active render targets
 	m_pImmediateContext->OMSetBlendState(m_pBlendStateNoPreBlendOp, blendFactor, sampleMask);
 
-	if (!m_pResourceManager->RenderModel(ModelResource::ClockModel, m_pCamera, m_pShaderManager->GetLightShader()))
+	if (m_bPlayClockAnimation)
+	{	
+		m_fClockRotation += (2 * XM_PI / 60) * (fDeltaTime / 1000);
+	}
+
+	if (!m_pResourceManager->RenderClock(m_pCamera, m_pShaderManager->GetLightShader(), m_fClockRotation))
 	{
 		return false;
 	}

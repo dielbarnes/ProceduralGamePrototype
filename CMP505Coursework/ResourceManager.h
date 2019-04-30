@@ -33,7 +33,8 @@ enum ModelResource : int
 {
 	CrystalPostModel = 0,
 	CrystalFenceModel,
-	ClockModel, 
+	ClockModel1,
+	ClockModel2,
 	LeverModel1,
 	LeverModel2,
 	CogwheelModel // Make this last
@@ -56,10 +57,12 @@ public:
 	bool IsRotatingLeftLever();
 	void SetShouldRotateRightLever(bool bShouldRotate);
 	bool IsRotatingRightLever();
+	void SetShouldRotateClock(bool bShouldRotate);
 
 	bool LoadResources();
 	void RenderModel(TxtModelResource resource);
 	bool RenderModel(int iModelIndex, Camera *pCamera, LightShader *pLightShader);
+	bool RenderClock(Camera *pCamera, LightShader *pLightShader, float fRotation);
 	bool RenderLever(Camera *pCamera, LightShader *pLightShader, float fLeftRotation, float fRightRotation);
 	bool RenderCogwheels(Camera *pCamera, LightShader *pLightShader, float fLeftRotation, float fRightRotation);
 
@@ -81,6 +84,9 @@ private:
 	XMMATRIX m_leverScalingMatrix;
 	XMMATRIX m_leftLeverTranslationMatrix;
 	XMMATRIX m_rightLeverTranslationMatrix;
+	bool m_bShouldRotateClock;
+	XMMATRIX m_clockScalingMatrix;
+	XMMATRIX m_clockTranslationMatrix;
 
 	HRESULT LoadDdsTexture(DdsTextureResource resource);
 	bool LoadTxtModel(TxtModelResource resource);

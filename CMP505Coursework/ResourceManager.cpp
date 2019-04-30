@@ -16,6 +16,7 @@ ResourceManager::ResourceManager(ID3D11Device *pDevice, ID3D11DeviceContext *pIm
 	m_bShouldRotateRightCogwheels = false;
 	m_bShouldRotateLeftLever = false;
 	m_bShouldRotateRightLever = false;
+	m_bShouldRotateClock = false;
 
 	unsigned char color[] = { 200, 200, 220, 255 };
 	Model::Create1x1ColorTexture(m_pDevice, color, &m_pDefaultTexture);
@@ -272,21 +273,25 @@ bool ResourceManager::LoadResources()
 	m_models[ModelResource::CrystalFenceModel]->SetPointLightPosition(XMFLOAT3(0.0f, 1.0f, 0.0f));
 
 	// Clock
+	
+	m_clockScalingMatrix = XMMatrixScaling(11.0f, 11.0f, 11.0f);
+	m_clockTranslationMatrix = XMMatrixTranslation(0.0f, 0.85f, -0.9f);
 
-	int iClockCount = 2;
-	Instance *clockInstances = new Instance[iClockCount];
-	clockInstances[0].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.85f, -0.9f) * XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 1.0f, XM_PI * 0.0f) * XMMatrixScaling(11.0f, 11.0f, 11.0f));
-	clockInstances[1].worldMatrix = XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, -0.2f) * XMMatrixRotationRollPitchYaw(XM_PI * -0.5f, XM_PI * 1.0f, XM_PI * 0.0f) * XMMatrixScaling(18.0f, 18.0f, 18.0f));
-	for (int i = 0; i < iClockCount; i++)
-	{
-		clockInstances[i].textureTileCount = XMINT2(1, 1);
-		clockInstances[i].lightDirection = DEFAULT_LIGHT_DIRECTION;
-	}
-	if (!LoadModel(ModelResource::ClockModel, iClockCount, clockInstances))
+	if (!LoadModel(ModelResource::ClockModel1, 1))
 	{
 		MessageBox(0, "Failed to load clock model.", "", 0);
 		return false;
 	}
+
+	m_models[ModelResource::ClockModel1]->SetWorldMatrix(m_clockTranslationMatrix * XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 1.0f, XM_PI * 0.0f) * m_clockScalingMatrix);
+
+	if (!LoadModel(ModelResource::ClockModel2, 1))
+	{
+		MessageBox(0, "Failed to load clock model.", "", 0);
+		return false;
+	}
+
+	m_models[ModelResource::ClockModel2]->SetWorldMatrix(XMMatrixTranslation(0.0f, 0.0f, -0.2f) * XMMatrixRotationRollPitchYaw(XM_PI * -0.5f, XM_PI * 1.0f, XM_PI * 0.0f) * XMMatrixScaling(18.0f, 18.0f, 18.0f));
 
 	// Lever
 
@@ -543,7 +548,8 @@ bool ResourceManager::LoadModel(ModelResource resource, int iInstanceCount, Inst
 	case CrystalFenceModel:
 		strFilePath = "Resources/crystal_fence.obj";
 		break;
-	case ClockModel:
+	case ClockModel1:
+	case ClockModel2:
 		strFilePath = "Resources/clock.obj";
 		break;
 	case LeverModel1:
@@ -622,6 +628,11 @@ bool ResourceManager::IsRotatingRightLever()
 	return m_bShouldRotateRightLever;
 }
 
+void ResourceManager::SetShouldRotateClock(bool bShouldRotate)
+{
+	m_bShouldRotateClock = bShouldRotate;
+}
+
 #pragma endregion
 
 #pragma region Render
@@ -654,6 +665,27 @@ bool ResourceManager::RenderModel(int iModelIndex, Camera *pCamera, LightShader 
 	}
 
 	return true;
+}
+
+bool ResourceManager::RenderClock(Camera *pCamera, LightShader *pLightShader, float fRotation)
+{
+	if (m_bShouldRotateClock)
+	{
+		m_clockTranslationMatrix = XMMatrixTranslation(0.0f, 9.3f, 9.9f);
+		m_models[ModelResource::ClockModel1]->SetWorldMatrixOfMesh(m_clockScalingMatrix * XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 1.0f, fRotation) * m_clockTranslationMatrix, 0);
+		m_models[ModelResource::ClockModel1]->SetWorldMatrixOfMesh(m_clockScalingMatrix * XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 1.0f, fRotation / 60.0f) * m_clockTranslationMatrix, 2);
+		m_models[ModelResource::ClockModel1]->SetWorldMatrixOfMesh(m_clockScalingMatrix * XMMatrixRotationRollPitchYaw(XM_PI * 0.0f, XM_PI * 1.0f, fRotation / 3600.0f) * m_clockTranslationMatrix, 1);
+	}
+
+	if (!RenderModel(ModelResource::ClockModel1, pCamera, pLightShader))
+	{
+		return false;
+	}
+
+	if (!RenderModel(ModelResource::ClockModel2, pCamera, pLightShader))
+	{
+		return false;
+	}
 }
 
 bool ResourceManager::RenderLever(Camera *pCamera, LightShader *pLightShader, float fLeftRotation, float fRightRotation)
