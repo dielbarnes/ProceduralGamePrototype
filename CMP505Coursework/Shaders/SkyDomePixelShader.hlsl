@@ -57,20 +57,22 @@ float4 CreateStarField(PS_INPUT input, float2 domeUv, float uvFactor)
     float2 uv = domeUv / 2.0f;
     uv *= uvFactor;
 
-    float2 gridCell = floor(uv);
-    float2 gridCellPoint = GetCellPoint(gridCell);
-    float2 gridOffset = frac(uv) - 0.5f;
+    float2 gridCell = floor(uv); // Give each cell an id
+    float2 gridCellPoint = GetCellPoint(gridCell); // Generate a random point within the cell
+    float2 gridOffset = frac(uv) - 0.5f; // Get the fractional part of uv so that it is between 0 and 1, then subtract 0.5 so that (0, 0) is at the center of the cell and it becomes from -0.5 to 0.5
     float2 rect = gridOffset - gridCellPoint;
 
+	// Give the star a diamond shape
     float oldY = rect.y;
     rect.y += sign(rect.y) * sqrt(abs(rect.x));
     rect.x += sign(rect.x) * sqrt(abs(oldY));
 
+	// Use sin function to make the star twinkle
     float dToAdj = length(rect) * (1.0f + sin(t * length(gridCell)) * 0.2f);
 	
-    float s = smoothstep(0.15f, 0.1f, dToAdj);
+    float s = smoothstep(0.15f, 0.1f, dToAdj); // Decrease opacity as distance from the center increases
     float3 color = float3(s, s, s);
-    color = color * step(0, input.domePosition.y);
+    color = color * step(0, input.domePosition.y); // Display stars only at the top half of the dome
     return float4(color, 1.0f);
 }
 

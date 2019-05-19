@@ -536,7 +536,7 @@ bool Graphics::Render(const float fDeltaTime)
 		{
 			if (m_fLeftAnimationRotation < XM_PI * 18 / 180) // 54 degrees / 3.0 speed
 			{
-				m_fLeftAnimationRotation += XM_PI * 0.001f;
+				m_fLeftAnimationRotation += ROTATION_INCREMENT;
 			}
 			else
 			{
@@ -554,7 +554,7 @@ bool Graphics::Render(const float fDeltaTime)
 		}
 		else
 		{
-			m_fLeftAnimationRotation += XM_PI * 0.001f;
+			m_fLeftAnimationRotation += ROTATION_INCREMENT;
 		}
 	}
 
@@ -564,7 +564,7 @@ bool Graphics::Render(const float fDeltaTime)
 		{
 			if (m_fRightAnimationRotation < XM_PI * 18 / 180) // 54 degrees / 3.0 speed
 			{
-				m_fRightAnimationRotation += XM_PI * 0.001f;
+				m_fRightAnimationRotation += ROTATION_INCREMENT;
 			}
 			else
 			{
@@ -582,7 +582,7 @@ bool Graphics::Render(const float fDeltaTime)
 		}
 		else
 		{
-			m_fRightAnimationRotation += XM_PI * 0.001f;
+			m_fRightAnimationRotation += ROTATION_INCREMENT;
 		}
 	}
 

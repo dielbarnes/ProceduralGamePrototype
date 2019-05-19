@@ -23,6 +23,8 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3d11.lib")
 
+#define ROTATION_INCREMENT (2 * XM_PI / 60) * (fDeltaTime / 1000) * 4;
+
 struct CollisionSphere
 {
 	BoundingSphere sphere;
