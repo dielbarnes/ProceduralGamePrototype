@@ -7,7 +7,9 @@ Uses procedural methods for a game level
 Procedural cogwheels using a stochastic, parametric L-system  
 Procedural stars  
 Bloom  
-Collision detection
+Collision detection  
+Uses Assimp (http://www.assimp.org)  
+Uses DirectXTK (https://github.com/microsoft/directxtk)
 
 ### Resources
 Clock model is from https://sketchfab.com/3d-models/vintage-clock-e2e5ed563cc340e69b824784748cc4e6  
